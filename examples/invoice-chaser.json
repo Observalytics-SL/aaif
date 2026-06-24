@@ -1,0 +1,218 @@
+{
+  "x-sc-schema": "agent.schema.json",
+  "sc_standard": "SC-006",
+  "sc_version": "2.1.0",
+  "agent_id": "a1b2c3d4-0001-4000-8000-invoice000001",
+  "status": "active",
+  "tags": ["finance", "accounts-receivable", "email", "automation"],
+  "agent": {
+    "name": "Invoice Chaser",
+    "version": "1.2.0",
+    "description": "Politely follows up on overdue invoices and drafts reminder emails without damaging customer relationships.",
+    "goal": "Reduce days-sales-outstanding by chasing overdue invoices, sending one reminder per invoice per week.",
+    "instructions": "You are a courteous accounts-receivable assistant for Rivera Consulting. Identify overdue invoices, draft a personalised but firm reminder email for each one, and record the outcome. Never threaten legal action — always offer a payment link and a named contact for disputes. Use UK English. Sign off as 'The Accounts Team'.",
+    "skills": ["email", "accounting", "invoice-management", "customer-communication"],
+    "model": {
+      "provider": "anthropic",
+      "preferred": "claude-haiku-3-5",
+      "fallbacks": [
+        { "provider": "openai",    "model": "gpt-4o-mini",            "max_cost_usd_per_1k_tokens": 0.002 },
+        { "provider": "groq",      "model": "llama-3.3-70b-versatile", "max_cost_usd_per_1k_tokens": 0.001 },
+        { "provider": "ollama",    "model": "llama3.2" }
+      ],
+      "routing_strategy": "cost",
+      "min_context_tokens": 16000,
+      "temperature": 0.3,
+      "params": { "max_tokens": 1024 },
+      "response_format": "json"
+    },
+    "orchestration": {
+      "role": "worker"
+    },
+    "context": [
+      {
+        "type": "schema_ref",
+        "label": "Invoice schema (SC-005)",
+        "value": "https://schemacommons.org/SC-005/business-object.schema.json",
+        "description": "Structure of the invoice objects returned by list_overdue_invoices."
+      },
+      {
+        "type": "text",
+        "label": "Tone guide",
+        "value": "Friendly, concise, professional. UK English. Never use exclamation marks."
+      },
+      {
+        "type": "url",
+        "label": "Payment portal URL",
+        "value": "https://pay.rivera-consulting.example.com",
+        "refresh_ttl_seconds": 86400
+      }
+    ],
+    "tools": [
+      {
+        "name": "list_overdue_invoices",
+        "description": "Return SC-005 invoice objects with status 'overdue', sorted by oldest first.",
+        "protocol": "mcp",
+        "endpoint": "mcp://accounting/invoices",
+        "parameters_schema": {
+          "type": "object",
+          "properties": {
+            "max_age_days": { "type": "integer", "description": "Only include invoices overdue by at most this many days." },
+            "exclude_disputed": { "type": "boolean", "default": true }
+          }
+        },
+        "output_schema": {
+          "type": "array",
+          "items": { "$ref": "https://schemacommons.org/SC-005/business-object.schema.json" }
+        },
+        "auth": { "type": "bearer", "env_var": "ACCOUNTING_API_TOKEN" },
+        "cache_ttl_seconds": 300,
+        "timeout_seconds": 10
+      },
+      {
+        "name": "send_email",
+        "description": "Send a reminder email to a customer contact.",
+        "protocol": "http",
+        "endpoint": "https://api.sendgrid.example.com/v3/mail/send",
+        "parameters_schema": {
+          "type": "object",
+          "required": ["to", "subject", "body"],
+          "properties": {
+            "to":      { "type": "string", "format": "email" },
+            "subject": { "type": "string" },
+            "body":    { "type": "string" },
+            "cc":      { "type": "string", "format": "email" }
+          }
+        },
+        "auth": { "type": "bearer", "env_var": "SENDGRID_API_KEY" },
+        "timeout_seconds": 15,
+        "rate_limit": { "requests_per_minute": 60 }
+      },
+      {
+        "name": "log_reminder_sent",
+        "description": "Record that a reminder was sent for an invoice so the rate-limit rule can be enforced.",
+        "protocol": "function",
+        "parameters_schema": {
+          "type": "object",
+          "required": ["invoice_id", "sent_at"],
+          "properties": {
+            "invoice_id": { "type": "string" },
+            "sent_at":    { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    ],
+    "memory": [
+      {
+        "scope": "user",
+        "key": "company_name",
+        "content": "Rivera Consulting",
+        "backend": "redis",
+        "ttl_seconds": 0
+      },
+      {
+        "scope": "long_term",
+        "key": "reminder_log",
+        "content": "Append-only log of all invoice reminders sent: {invoice_id, customer, sent_at}.",
+        "backend": "postgres",
+        "ttl_seconds": 0
+      },
+      {
+        "scope": "task",
+        "key": "run_summary",
+        "content": "Summary of the current run: invoices processed, emails sent, errors.",
+        "backend": "in_memory",
+        "ttl_seconds": 3600
+      }
+    ],
+    "constraints": [
+      "Never send more than one reminder per invoice per week.",
+      "Never contact customers flagged as 'in_dispute'.",
+      "Always include a payment link and a named dispute contact in every email.",
+      "Never mention specific invoice amounts in the email subject line.",
+      "Do not send emails outside 08:00–18:00 UTC Monday–Friday."
+    ],
+    "io": {
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "max_age_days": { "type": "integer", "default": 90 },
+          "dry_run":      { "type": "boolean", "default": false }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "required": ["emails_drafted", "emails_sent", "skipped"],
+        "properties": {
+          "emails_drafted": { "type": "integer" },
+          "emails_sent":    { "type": "integer" },
+          "skipped":        { "type": "integer", "description": "Invoices skipped due to dispute flag or rate limit." },
+          "errors":         { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "streaming": false,
+      "format": "json",
+      "mode": "async"
+    },
+    "events": {
+      "triggers": [
+        {
+          "type": "schedule",
+          "schedule": "0 9 * * 1-5",
+          "filter": { "lang": "jsonpath", "expr": "$[?(@.dry_run == false)]", "nl": "skip dry runs" }
+        },
+        {
+          "type": "manual"
+        }
+      ],
+      "on_complete": "notify_finance_team",
+      "on_error":    "alert_ops_channel"
+    },
+    "runtime": {
+      "timeout_seconds": 300,
+      "max_retries": 2,
+      "retry_backoff": "exponential",
+      "concurrency": 1,
+      "async_execution": true,
+      "queue": "finance-agents",
+      "environment": "production"
+    },
+    "telemetry": {
+      "tracing":   true,
+      "log_level": "info",
+      "metrics":   true
+    },
+    "evaluation": {
+      "judge_model": "claude-opus-4-5",
+      "metrics": [
+        { "name": "task_completion",  "threshold": 0.95 },
+        { "name": "faithfulness",     "threshold": 0.90 },
+        { "name": "toxicity",         "threshold": 0.01 }
+      ],
+      "test_cases": [
+        {
+          "id": "tc-001",
+          "input": { "max_age_days": 30, "dry_run": true },
+          "criteria": "Email must be polite, include a payment link, not mention legal action, and be addressed to the correct contact."
+        }
+      ]
+    },
+    "compliance": {
+      "safety_level":  "standard",
+      "data_residency": "EU",
+      "pii_handling":  "detect",
+      "audit_log":     true,
+      "human_in_the_loop": {
+        "enabled": false
+      }
+    }
+  },
+  "provenance": {
+    "authored_by":     "alex.rivera",
+    "source_platform": "Open WebUI",
+    "created_at":      "2026-06-09T08:00:00Z",
+    "updated_at":      "2026-06-10T10:00:00Z",
+    "license":         "proprietary",
+    "sc_refs":         ["SC-005"]
+  }
+}

@@ -1,0 +1,247 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemacommons.org/SC-006/platform-manifest.schema.json",
+  "title": "AAIF Platform Manifest",
+  "description": "Declares the capabilities of an AAIF-conforming runtime platform. Published by a platform operator so that orchestrators and agents can perform capability negotiation before dispatching an agent definition. Mirrors the required_capabilities[] vocabulary used in agent.schema.json §R.",
+  "x-sc-standard": "SC-006",
+  "x-sc-version": "3.4.0",
+  "type": "object",
+  "required": ["sc_standard", "sc_version", "platform"],
+  "additionalProperties": false,
+  "patternProperties": {
+    "^x-": {
+      "description": "Reserved extension namespace (SPECIFICATION §W). Keys beginning with 'x-' carry vendor/tool metadata; runtimes MUST ignore unknown extension keys. The validator hint 'x-sc-schema' lives here."
+    }
+  },
+  "properties": {
+    "_comment": {
+      "type": "string",
+      "description": "Non-normative human annotation (SPECIFICATION §W). Ignored by runtimes."
+    },
+    "sc_standard": {
+      "const": "SC-006",
+      "description": "Must be 'SC-006'."
+    },
+    "sc_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "AAIF schema version this manifest targets."
+    },
+
+    "platform": {
+      "type": "object",
+      "required": ["name", "version", "aaif_conformance_level"],
+      "additionalProperties": false,
+      "properties": {
+
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable platform name (e.g. 'Open WebUI', 'LangGraph Cloud')."
+        },
+        "version": {
+          "type": "string",
+          "description": "Platform software version."
+        },
+        "vendor": {
+          "type": "string",
+          "description": "Organisation or individual publishing this manifest."
+        },
+        "manifest_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Canonical URL where this manifest is published. Agents can be POSTed to this URL for import if the platform exposes a REST intake endpoint."
+        },
+        "aaif_conformance_level": {
+          "type": "string",
+          "enum": ["Core", "Tooled", "Portable", "Multi-agent", "Observable", "Enterprise", "Stateful"],
+          "description": "Highest AAIF conformance level fully supported by this platform. Levels are cumulative — 'Enterprise' implies all lower levels."
+        },
+        "aaif_versions_supported": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+          "minItems": 1,
+          "description": "List of AAIF sc_version values this platform can accept (e.g. ['2.0.0', '2.1.0', '3.0.0'])."
+        },
+
+        "capabilities": {
+          "type": "object",
+          "description": "Structured declaration of runtime capabilities. Each sub-object corresponds to a capability namespace from the required_capabilities[] vocabulary in §R.",
+          "additionalProperties": false,
+          "properties": {
+
+            "tool": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "function": { "type": "boolean", "description": "Supports protocol: function tools." },
+                "mcp":      { "type": "boolean", "description": "Supports protocol: mcp tools." },
+                "http":     { "type": "boolean", "description": "Supports protocol: http tools." },
+                "openapi":  { "type": "boolean", "description": "Supports protocol: openapi tools." },
+                "parallel_calls": { "type": "boolean", "description": "Can execute multiple tool calls in parallel within a single agent turn." }
+              }
+            },
+
+            "memory": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "in_memory":    { "type": "boolean" },
+                "redis":        { "type": "boolean" },
+                "postgres":     { "type": "boolean" },
+                "mongodb":      { "type": "boolean" },
+                "elasticsearch":{ "type": "boolean" },
+                "qdrant":       { "type": "boolean" },
+                "pinecone":     { "type": "boolean" },
+                "chroma":       { "type": "boolean" },
+                "vector":       { "type": "boolean", "description": "At least one vector backend is available with embedding + similarity retrieval." }
+              }
+            },
+
+            "model": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "providers": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "description": "List of model provider identifiers this platform can route to (e.g. ['openai', 'anthropic', 'groq', 'ollama'])."
+                },
+                "routing_strategies": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": ["cost", "latency", "quality", "round_robin"]
+                  },
+                  "description": "Routing strategies this platform implements."
+                },
+                "fallback": { "type": "boolean", "description": "Supports model fallback chains." },
+                "streaming": { "type": "boolean" },
+                "function_calling": { "type": "boolean" },
+                "structured_output": { "type": "boolean", "description": "Supports response_format: json_schema." },
+                "vision": { "type": "boolean" }
+              }
+            },
+
+            "orchestration": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "pipeline":    { "type": "boolean", "description": "Sequential pipeline topology." },
+                "parallel":    { "type": "boolean", "description": "Parallel / fan-out swarm topology." },
+                "dynamic_routing": { "type": "boolean" },
+                "handoff":     { "type": "boolean", "description": "Mid-run handoff to another agent." },
+                "consensus":   { "type": "boolean" },
+                "max_subagents": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "Maximum number of subagents a single orchestrator may spawn. Omit if no hard limit."
+                },
+                "condition_languages": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "enum": ["jsonpath", "jmespath", "cel", "jsonlogic", "always", "never"]
+                  },
+                  "description": "Structured Condition (§V) expression languages this platform evaluates deterministically for when/handoff.condition/filter/hitl.trigger. Agents using a lang not listed here are subject to the unsupported-capability behaviour for the agent's safety_level."
+                }
+              }
+            },
+
+            "auth": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "bearer":    { "type": "boolean" },
+                "api_key":   { "type": "boolean" },
+                "oauth2":    { "type": "boolean" },
+                "aws_sigv4": { "type": "boolean" },
+                "vault": {
+                  "type": "object",
+                  "description": "Vault secret resolution capability.",
+                  "additionalProperties": false,
+                  "properties": {
+                    "supported": { "type": "boolean" },
+                    "providers": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": ["aws_secrets_manager", "hashicorp_vault", "azure_key_vault", "gcp_secret_manager", "1password"]
+                      },
+                      "description": "Vault providers this platform can resolve vault_ref from."
+                    }
+                  }
+                }
+              }
+            },
+
+            "state": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "checkpoint": { "type": "boolean", "description": "Can write and restore agent-state.schema.json checkpoints." },
+                "live_migration": { "type": "boolean", "description": "Implements the §Q 7-step cross-platform live migration protocol." },
+                "streaming_handoff": { "type": "boolean", "description": "Supports the §S NDJSON streaming handoff wire format." },
+                "max_conversation_tokens": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "Maximum number of conversation tokens that can be stored in a checkpoint. 0 means unlimited."
+                }
+              }
+            },
+
+            "compliance": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "human_in_the_loop": { "type": "boolean" },
+                "audit_log":         { "type": "boolean" },
+                "pii_scrubbing":     { "type": "boolean" },
+                "data_residency_regions": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "description": "ISO 3166 region codes where this platform can guarantee data residency (e.g. ['EU', 'US', 'UK'])."
+                }
+              }
+            },
+
+            "telemetry": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "otel_traces":  { "type": "boolean" },
+                "otel_metrics": { "type": "boolean" },
+                "otlp_export":  { "type": "boolean" }
+              }
+            }
+          }
+        },
+
+        "intake_endpoint": {
+          "type": "object",
+          "description": "Optional REST endpoint where AAIF agent definitions can be POSTed for import.",
+          "additionalProperties": false,
+          "properties": {
+            "url":             { "type": "string", "format": "uri" },
+            "method":          { "type": "string", "enum": ["POST", "PUT"], "default": "POST" },
+            "auth_scheme":     { "type": "string", "enum": ["bearer", "api_key", "none"] },
+            "content_type":    { "type": "string", "default": "application/json" },
+            "max_body_bytes":  { "type": "integer", "minimum": 0 }
+          }
+        },
+
+        "manifest_issued_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when this manifest was generated."
+        },
+        "manifest_expires_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Optional expiry. Callers should re-fetch after this time."
+        }
+      }
+    }
+  }
+}

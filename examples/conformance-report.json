@@ -1,0 +1,70 @@
+{
+  "x-sc-schema": "conformance-report.schema.json",
+  "_comment": "Example AAIF conformance self-certification report. A real platform publishes this at /.well-known/aaif-conformance.json. See SPECIFICATION §Y and CONFORMANCE.md.",
+  "sc_standard": "SC-006",
+  "report": {
+    "generated_at": "2026-06-11T12:00:00Z",
+    "expires_at": "2026-12-11T12:00:00Z",
+    "aaif_versions": ["3.2.0", "3.3.0", "3.4.0"],
+    "report_url": "https://aaif.acme.example/.well-known/aaif-conformance.json"
+  },
+  "platform": {
+    "name": "Example AAIF Runtime",
+    "version": "1.4.0",
+    "vendor": "Acme Corp",
+    "manifest_url": "https://aaif.acme.example/.well-known/aaif-manifest.json",
+    "homepage": "https://aaif.acme.example"
+  },
+  "claims": [
+    {
+      "level": "Enterprise",
+      "direction": "consumer",
+      "test_suite": {
+        "corpus": "SC-006@3.4.0 tests/conformance",
+        "passed": 21,
+        "total": 21,
+        "ran_at": "2026-06-11T11:58:00Z",
+        "log_url": "https://ci.acme.example/runs/aaif-conformance/8412"
+      }
+    },
+    {
+      "level": "Portable",
+      "direction": "producer",
+      "test_suite": {
+        "corpus": "SC-006@3.4.0 tests/conformance",
+        "passed": 21,
+        "total": 21,
+        "ran_at": "2026-06-11T11:58:00Z"
+      },
+      "roundtrip": [
+        {
+          "framework": "openai_assistant",
+          "lossless_fields": [
+            "agent.name", "agent.instructions", "agent.model.preferred",
+            "agent.model.response_format", "agent.tools[].name",
+            "agent.tools[].description", "agent.tools[].parameters_schema",
+            "agent.model.params.temperature", "agent.model.params.top_p"
+          ],
+          "lossy_fields": ["agent.orchestration", "agent.compliance", "agent.memory[].backend"]
+        }
+      ]
+    }
+  ],
+  "supported": {
+    "providers": ["openai", "anthropic", "groq", "ollama", "azure_openai", "openrouter"],
+    "capabilities": [
+      "tool.function", "tool.mcp", "tool.http", "memory.vector", "memory.redis",
+      "orchestration.parallel", "orchestration.pipeline", "orchestration.handoff",
+      "condition.structured", "telemetry.otel", "compliance.hitl", "compliance.audit_log",
+      "compliance.data_residency", "auth.vault"
+    ],
+    "condition_languages": ["jsonpath", "cel", "jsonlogic", "always", "never"],
+    "vault_providers": ["aws_secretsmanager", "hashicorp_vault", "azure_keyvault"],
+    "memory_backends": ["in_memory", "redis", "postgres", "qdrant"],
+    "tool_protocols": ["function", "mcp", "http", "openapi"]
+  },
+  "attestation": {
+    "attested_by": "Platform Engineering, Acme Corp",
+    "contact": "aaif-conformance@acme.example"
+  }
+}

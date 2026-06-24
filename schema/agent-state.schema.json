@@ -1,0 +1,356 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemacommons.org/SC-006/agent-state.schema.json",
+  "title": "AAIF Agent State Checkpoint",
+  "description": "Autonomous Agent Interchange Format (SC-006) — companion schema for agent state checkpoints. An Agent State document captures a complete, portable snapshot of a running agent's execution context: conversation history, memory contents, pipeline position, pending tool calls, and subagent states. It is used for cross-platform live migration, pause/resume, crash recovery, and debugging. Any conforming runtime that can produce a valid Agent State document from a running agent, and restore that state into a new agent instance, achieves live portability.",
+  "x-sc-standard": "SC-006",
+  "x-sc-version": "3.4.0",
+  "type": "object",
+  "required": ["sc_standard", "state_id", "agent_id", "checkpoint_at", "status"],
+  "additionalProperties": false,
+  "patternProperties": {
+    "^x-": {
+      "description": "Reserved extension namespace (SPECIFICATION §W). Keys beginning with 'x-' carry vendor/tool metadata; runtimes MUST ignore unknown extension keys. The validator hint 'x-sc-schema' lives here."
+    }
+  },
+  "properties": {
+    "_comment": {
+      "type": "string",
+      "description": "Non-normative human annotation (SPECIFICATION §W). Ignored by runtimes."
+    },
+    "sc_standard": {
+      "const": "SC-006",
+      "description": "Standard identifier — must be 'SC-006'."
+    },
+    "sc_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "default": "3.0.0",
+      "description": "AAIF schema version of this state document."
+    },
+    "state_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Globally unique identifier for this specific checkpoint. A new UUID is assigned each time a checkpoint is captured, even for the same run."
+    },
+    "agent_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "The agent_id of the agent definition (agent.schema.json) this state belongs to."
+    },
+    "run_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for this execution run. All checkpoints for the same run share the same run_id."
+    },
+    "agent_version": {
+      "type": "string",
+      "description": "The agent.version of the agent definition at the time of capture."
+    },
+    "checkpoint_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp when this checkpoint was captured."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "running",
+        "paused",
+        "awaiting_approval",
+        "awaiting_tool_result",
+        "completed",
+        "failed",
+        "migrating"
+      ],
+      "description": "'running': actively executing; 'paused': suspended mid-run (e.g. for inspection or scheduled resume); 'awaiting_approval': human-in-the-loop gate triggered, waiting for human decision; 'awaiting_tool_result': one or more async tool calls are in-flight; 'completed': run finished successfully; 'failed': run terminated with error; 'migrating': checkpoint is in transit between platforms."
+    },
+    "iteration": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Current agentic loop iteration count. Runtimes compare this against the agent definition's max_iterations to enforce the loop guard on restore."
+    },
+
+    "pipeline_position": {
+      "type": "object",
+      "description": "Current position within a declared pipeline or orchestration graph. Used to resume a sequential or parallel orchestration at the correct step.",
+      "additionalProperties": false,
+      "properties": {
+        "current_step": {
+          "type": "string",
+          "description": "Alias or ID of the currently executing pipeline step."
+        },
+        "completed_steps": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Ordered list of pipeline steps that have already completed successfully."
+        },
+        "remaining_steps": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Ordered list of pipeline steps yet to be executed."
+        },
+        "current_subagent": {
+          "type": "string",
+          "description": "Alias of the subagent currently executing within the current step, if any."
+        },
+        "parallel_slot": {
+          "type": "integer",
+          "description": "In a parallel swarm, the zero-based index of this agent's fan-out slot."
+        }
+      }
+    },
+
+    "conversation": {
+      "type": "array",
+      "description": "Complete conversation history as of this checkpoint. Each item is a message in the LLM's native turn format. On restore, this array is used to reconstruct the context window. Runtimes MUST truncate from the start if the restored model's context window cannot fit the full history.",
+      "items": {
+        "type": "object",
+        "required": ["role", "content"],
+        "additionalProperties": false,
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["system", "user", "assistant", "tool"],
+            "description": "Message role in the conversation."
+          },
+          "content": {
+            "type": "string",
+            "description": "Message content. For tool messages, this is the tool's return value as a JSON string."
+          },
+          "tool_call_id": {
+            "type": "string",
+            "description": "For role='tool': the ID of the tool call this message is a result for."
+          },
+          "tool_name": {
+            "type": "string",
+            "description": "For role='tool': the name of the tool that was called."
+          },
+          "token_count": {
+            "type": "integer",
+            "description": "Approximate token count for this message. Used by the runtime to estimate context window usage before restoring."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When this message was produced."
+          }
+        }
+      }
+    },
+
+    "memory_snapshot": {
+      "type": "array",
+      "description": "Snapshot of all in-scope memory items at checkpoint time. On restore, these are loaded into the target runtime's memory layer before execution resumes. Items with scope='session' MUST NOT be loaded into a different user's session.",
+      "items": {
+        "type": "object",
+        "required": ["scope", "key", "content"],
+        "additionalProperties": false,
+        "properties": {
+          "scope": {
+            "type": "string",
+            "enum": ["user", "session", "task", "long_term"],
+            "description": "Memory scope."
+          },
+          "key": {
+            "type": "string",
+            "description": "Memory key."
+          },
+          "content": {
+            "type": "string",
+            "description": "Memory content. For vector items, this is the text chunk; embeddings are not captured in the checkpoint (they are re-computed on restore)."
+          },
+          "backend": {
+            "type": "string",
+            "description": "Original backend. Informational — the restoring platform uses its own configured backend."
+          },
+          "captured_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When this memory item was last written."
+          },
+          "ttl_remaining_seconds": {
+            "type": "integer",
+            "description": "Remaining TTL seconds at checkpoint time. The restoring runtime should set a TTL of this value (not the original ttl_seconds)."
+          }
+        }
+      }
+    },
+
+    "pending_tool_calls": {
+      "type": "array",
+      "description": "Tool calls that were initiated but whose results have not yet been received (e.g. async HTTP calls, long-running MCP operations). On restore, the runtime must either re-issue these calls or mark them as timed-out.",
+      "items": {
+        "type": "object",
+        "required": ["id", "tool_name", "arguments"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Tool call ID as assigned by the LLM's function-calling API."
+          },
+          "tool_name": {
+            "type": "string",
+            "description": "Name of the tool that was called."
+          },
+          "arguments": {
+            "type": "object",
+            "description": "Arguments passed to the tool."
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "in_flight", "awaiting_result"],
+            "description": "'pending': call queued but not yet sent; 'in_flight': HTTP/MCP request sent; 'awaiting_result': waiting for async completion callback."
+          },
+          "submitted_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the tool call was initiated."
+          },
+          "callback_url": {
+            "type": "string",
+            "description": "Callback URL registered for async tool results. The restoring runtime should re-register this if possible."
+          }
+        }
+      }
+    },
+
+    "subagent_states": {
+      "type": "array",
+      "description": "State summaries for active subagents at checkpoint time. For a complete deep migration, each referenced subagent must also export its own Agent State document. The state_id field here links to that document.",
+      "items": {
+        "type": "object",
+        "required": ["alias", "agent_id"],
+        "additionalProperties": false,
+        "properties": {
+          "alias": {
+            "type": "string",
+            "description": "Subagent alias as declared in orchestration.subagents[]."
+          },
+          "agent_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Agent ID of the subagent definition."
+          },
+          "state_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "State checkpoint ID of the subagent's own Agent State document, if captured."
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "running", "paused", "completed", "failed"],
+            "description": "Subagent execution status."
+          },
+          "output": {
+            "description": "Captured output from a completed subagent. Any JSON value matching the subagent's io.output_schema."
+          }
+        }
+      }
+    },
+
+    "variables": {
+      "type": "object",
+      "description": "Named task-scope variables set or updated during execution (e.g. accumulated results, counters, flags). These are agent-defined and carried through the run. On restore, these are re-injected into the execution context.",
+      "additionalProperties": true
+    },
+
+    "approval_request": {
+      "type": "object",
+      "description": "Present when status='awaiting_approval'. Describes the action awaiting human approval.",
+      "additionalProperties": false,
+      "properties": {
+        "trigger_description": {
+          "type": "string",
+          "description": "Human-readable description of why approval is required (e.g. 'About to call send_email with 47 recipients')."
+        },
+        "pending_action": {
+          "type": "object",
+          "description": "The tool call or action awaiting approval.",
+          "properties": {
+            "tool_name": { "type": "string" },
+            "arguments":  { "type": "object" }
+          }
+        },
+        "requested_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "timeout_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "If no approval is received by this time, the runtime should take the configured default action (abort or auto-approve)."
+        },
+        "approver_hint": {
+          "type": "string",
+          "description": "Username, role, or channel that should receive the approval request."
+        }
+      }
+    },
+
+    "error": {
+      "type": "object",
+      "description": "Present when status='failed'. Describes the terminal error.",
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Machine-readable error code (e.g. 'TOOL_TIMEOUT', 'CONSTRAINT_VIOLATION', 'MAX_ITERATIONS_EXCEEDED', 'MODEL_UNAVAILABLE')."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable error message."
+        },
+        "step": {
+          "type": "string",
+          "description": "Pipeline step or tool name where the error occurred."
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "retries_remaining": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "How many retries remain per the agent's runtime.max_retries setting."
+        },
+        "stack_trace": {
+          "type": "string",
+          "description": "Optional stack trace for debugging (SHOULD be omitted from checkpoints leaving the originating platform)."
+        }
+      }
+    },
+
+    "provenance": {
+      "type": "object",
+      "description": "Platform metadata for this checkpoint. Critical for cross-platform migration: the receiving platform uses this to understand what it is restoring from.",
+      "additionalProperties": false,
+      "properties": {
+        "source_platform": {
+          "type": "string",
+          "description": "Name of the platform that captured this checkpoint (e.g. 'LangGraph', 'CrewAI', 'Open WebUI')."
+        },
+        "source_runtime_version": {
+          "type": "string",
+          "description": "Version of the source platform's runtime (e.g. '0.2.45' for LangGraph)."
+        },
+        "captured_by": {
+          "type": "string",
+          "description": "Username or service account that triggered the checkpoint."
+        },
+        "target_platform": {
+          "type": "string",
+          "description": "Intended destination platform for a migration checkpoint. Informational."
+        },
+        "migration_token": {
+          "type": "string",
+          "description": "Opaque, short-lived token issued by the source platform to authorise the transfer. The receiving platform validates this token before restoring state. This prevents replay attacks on migrated agent state."
+        },
+        "checksum": {
+          "type": "string",
+          "description": "SHA-256 hex digest of the canonical JSON of this document (excluding this field). The receiving platform MUST verify the checksum before restoring."
+        }
+      }
+    }
+  }
+}

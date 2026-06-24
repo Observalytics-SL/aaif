@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemacommons.org/SC-006/registry.schema.json",
+  "title": "AAIF Extension Registry",
+  "description": "Meta-schema every AAIF registry file in this directory validates against. A registry is a community-maintained, machine-readable list of allowed identifiers for one open extension point (providers, capabilities, condition languages, vault providers, memory backends, tool protocols). It lets the ecosystem grow without forking the core schema. See registries/README.md and SPECIFICATION §X.",
+  "x-sc-standard": "SC-006",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["registry", "sc_standard", "description", "registration_policy", "entries"],
+  "properties": {
+    "registry": { "type": "string", "pattern": "^aaif-[a-z0-9-]+$", "description": "Registry identifier." },
+    "sc_standard": { "const": "SC-006" },
+    "description": { "type": "string" },
+    "registration_policy": {
+      "type": "string",
+      "description": "How new entries are accepted. One of the IANA-style policies: 'Standards Action', 'Specification Required', 'Expert Review', or 'First Come First Served' (optionally with a clarifying clause)."
+    },
+    "updated_at": { "type": "string", "format": "date" },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "status"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "description": "The registered identifier (the value that appears in AAIF documents)." },
+          "status": {
+            "type": "string",
+            "enum": ["standard", "provisional", "deprecated", "reserved"],
+            "description": "'standard': ratified; 'provisional': accepted but may change; 'deprecated': kept for back-compat, avoid in new docs; 'reserved': name held, not yet usable."
+          },
+          "since": { "type": ["string", "null"], "description": "Schema version that introduced the entry." }
+        }
+      }
+    }
+  }
+}

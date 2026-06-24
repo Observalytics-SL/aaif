@@ -1,0 +1,13 @@
+{
+  "_comment": "MUST REJECT — provider 'custom' requires 'provider_id' so the runtime can route deterministically.",
+  "x-sc-schema": "agent.schema.json",
+  "sc_standard": "SC-006",
+  "agent": {
+    "name": "Custom Provider Without ID",
+    "goal": "Test that custom providers must declare provider_id.",
+    "model": {
+      "provider": "custom",
+      "preferred": "some-model"
+    }
+  }
+}

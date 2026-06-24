@@ -1,0 +1,9 @@
+{
+  "_comment": "MUST REJECT — missing required 'agent.goal' field",
+  "x-sc-schema": "agent.schema.json",
+  "sc_standard": "SC-006",
+  "sc_version": "2.1.0",
+  "agent": {
+    "name": "Incomplete Agent"
+  }
+}

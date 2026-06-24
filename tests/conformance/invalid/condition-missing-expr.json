@@ -1,0 +1,18 @@
+{
+  "_comment": "MUST REJECT — a 'jsonpath' condition requires an 'expr' (only 'always'/'never' may omit it).",
+  "x-sc-schema": "agent.schema.json",
+  "sc_standard": "SC-006",
+  "agent": {
+    "name": "Condition Missing Expr",
+    "goal": "Test that jsonpath conditions require an expression.",
+    "events": {
+      "triggers": [
+        {
+          "type": "webhook",
+          "webhook_path": "/t",
+          "filter": { "lang": "jsonpath", "nl": "missing the expr" }
+        }
+      ]
+    }
+  }
+}

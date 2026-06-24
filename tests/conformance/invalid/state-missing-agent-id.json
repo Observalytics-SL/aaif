@@ -1,0 +1,9 @@
+{
+  "_comment": "MUST REJECT — agent-state: missing required 'agent_id'",
+  "x-sc-schema": "agent-state.schema.json",
+  "sc_standard": "SC-006",
+  "sc_version": "3.0.0",
+  "state_id": "s0000099-0000-4000-8000-000000000099",
+  "checkpoint_at": "2026-06-10T12:00:00Z",
+  "status": "paused"
+}

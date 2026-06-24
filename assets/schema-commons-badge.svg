@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="232" height="28" role="img" aria-label="Schema Commons: Standard">
+  <title>Schema Commons: Standard</title>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".12"/>
+      <stop offset="1" stop-opacity=".12"/>
+    </linearGradient>
+    <clipPath id="r"><rect width="232" height="28" rx="5" fill="#fff"/></clipPath>
+  </defs>
+  <g clip-path="url(#r)">
+    <rect width="150" height="28" fill="#0b1f3a"/>
+    <rect x="150" width="82" height="28" fill="#1f7a5a"/>
+    <rect width="232" height="28" fill="url(#g)"/>
+  </g>
+  <g fill="#fff" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="12">
+    <text x="34" y="18" font-weight="bold">Schema Commons</text>
+    <text x="162" y="18" font-weight="bold">Standard</text>
+  </g>
+  <!-- mark: open brackets around a check -->
+  <g transform="translate(10,7)" fill="none" stroke="#f5a524" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 1 L2 1 L2 13 L6 13"/>
+    <path d="M12 1 L16 1 L16 13 L12 13"/>
+    <path d="M5 7 l2.5 2.5 L13 4" stroke="#ffffff"/>
+  </g>
+</svg>

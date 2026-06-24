@@ -1,0 +1,11 @@
+{
+  "x-sc-schema": "agent.schema.json",
+  "_comment": "Must REJECT: 'metadata' is an unknown root key with no 'x-' prefix. The §W extension namespace only legalises x-* and _comment; additionalProperties:false still rejects everything else, catching typos like this.",
+  "sc_standard": "SC-006",
+  "sc_version": "3.3.0",
+  "metadata": { "note": "this should have been x-metadata" },
+  "agent": {
+    "name": "Bad Extension Agent",
+    "goal": "Trigger a root additionalProperties violation."
+  }
+}

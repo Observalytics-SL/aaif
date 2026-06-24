@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemacommons.org/SC-006/conformance-report.schema.json",
+  "title": "AAIF Conformance Self-Certification Report",
+  "description": "A machine-readable, self-published statement of a platform's AAIF (SC-006) conformance. Published at /.well-known/aaif-conformance.json. Lets orchestrators, CI pipelines, and the adopter registry verify a platform's claimed conformance level and supported registries before dispatching agents. See SPECIFICATION §Y and CONFORMANCE.md. Self-certification is honour-based but machine-checkable: the claim references a public test-suite result.",
+  "x-sc-standard": "SC-006",
+  "x-sc-version": "3.4.0",
+  "type": "object",
+  "additionalProperties": false,
+  "patternProperties": { "^x-": { "description": "Reserved extension namespace (§W)." } },
+  "required": ["sc_standard", "report", "platform", "claims"],
+  "properties": {
+    "_comment": { "type": "string" },
+    "sc_standard": { "const": "SC-006" },
+    "report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["generated_at", "aaif_versions"],
+      "properties": {
+        "generated_at": { "type": "string", "format": "date-time", "description": "When this report was produced (ISO 8601 UTC)." },
+        "expires_at": { "type": "string", "format": "date-time", "description": "Optional expiry; consumers SHOULD re-fetch after this." },
+        "aaif_versions": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+          "description": "AAIF schema versions this platform supports."
+        },
+        "report_url": { "type": "string", "format": "uri", "description": "Canonical URL of this report (typically the .well-known path)." }
+      }
+    },
+    "platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "vendor": { "type": "string" },
+        "manifest_url": { "type": "string", "format": "uri", "description": "URL of the platform's AAIF Platform Manifest (§U)." },
+        "homepage": { "type": "string", "format": "uri" }
+      }
+    },
+    "claims": {
+      "type": "array",
+      "minItems": 1,
+      "description": "One claim per (level, direction). A platform may be e.g. Producer:Enterprise and Consumer:Portable.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["level", "direction", "test_suite"],
+        "properties": {
+          "level": {
+            "type": "string",
+            "enum": ["Core", "Tooled", "Portable", "Multi-agent", "Observable", "Enterprise", "Stateful"],
+            "description": "Claimed conformance level (§M)."
+          },
+          "direction": {
+            "type": "string",
+            "enum": ["producer", "consumer", "both"],
+            "description": "'producer': exports conformant AAIF; 'consumer': imports and honours it; 'both'."
+          },
+          "test_suite": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["corpus", "passed", "total"],
+            "properties": {
+              "corpus": { "type": "string", "description": "Identifier/commit of the conformance corpus run (e.g. 'SC-006@3.4.0 tests/conformance')." },
+              "passed": { "type": "integer", "minimum": 0 },
+              "total": { "type": "integer", "minimum": 0 },
+              "ran_at": { "type": "string", "format": "date-time" },
+              "log_url": { "type": "string", "format": "uri", "description": "Optional link to a public CI run." }
+            }
+          },
+          "roundtrip": {
+            "type": "array",
+            "description": "Optional interop evidence: frameworks this platform losslessly round-trips for the level's field set.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["framework", "lossless_fields"],
+              "properties": {
+                "framework": { "type": "string", "description": "e.g. 'openai_assistant', 'langgraph', 'crewai'." },
+                "lossless_fields": { "type": "array", "items": { "type": "string" }, "description": "AAIF field paths preserved through framework→AAIF→framework." },
+                "lossy_fields": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "supported": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Registry coverage (ids from registries/*.json the platform implements). Lets orchestrators match agents to platforms.",
+      "properties": {
+        "providers": { "type": "array", "items": { "type": "string" } },
+        "capabilities": { "type": "array", "items": { "type": "string" } },
+        "condition_languages": { "type": "array", "items": { "type": "string" } },
+        "vault_providers": { "type": "array", "items": { "type": "string" } },
+        "memory_backends": { "type": "array", "items": { "type": "string" } },
+        "tool_protocols": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "attestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Who stands behind this claim.",
+      "properties": {
+        "attested_by": { "type": "string", "description": "Name/role of the person or team certifying." },
+        "contact": { "type": "string", "description": "Email or URL for conformance questions." },
+        "signature": { "type": "string", "description": "Optional base64 Ed25519 signature over the canonical JSON (excluding this field)." }
+      }
+    }
+  }
+}

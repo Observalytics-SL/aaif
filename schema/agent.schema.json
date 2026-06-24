@@ -1,0 +1,863 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemacommons.org/SC-006/agent.schema.json",
+  "title": "AAIF Agent Definition",
+  "description": "Autonomous Agent Interchange Format v2 (SC-006) — a portable, platform-neutral definition of an AI agent for multi-agent LLM platforms. Covers identity, model routing, orchestration topology, tool protocols, memory backends, runtime config, telemetry, evaluation, and compliance. An agent defined here can be imported and executed on any conforming runtime (LangGraph, Open WebUI, CrewAI, AutoGen, custom orchestrators) across any LLM provider.",
+  "x-sc-standard": "SC-006",
+  "x-sc-version": "3.4.0",
+  "type": "object",
+  "required": ["sc_standard", "agent"],
+  "additionalProperties": false,
+  "patternProperties": {
+    "^x-": {
+      "description": "Reserved extension namespace (SPECIFICATION §W). Any property whose name begins with 'x-' carries vendor- or tool-specific metadata. Conforming runtimes MUST ignore extension keys they do not understand and MUST NOT let them change agent behaviour. The validator hint 'x-sc-schema' (naming the target schema file) lives in this namespace."
+    }
+  },
+  "$defs": {
+    "condition": {
+      "title": "Condition",
+      "description": "A routing, gating, or filter condition. Two forms are accepted. The STRUCTURED object form is deterministic and portable — every conforming runtime evaluates it identically — and is the RECOMMENDED form. The bare STRING form is a natural-language hint only: it is non-deterministic, each runtime interprets it independently, and it MUST NOT be relied on for portable routing. See SPECIFICATION §V.",
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Natural-language hint (non-deterministic). Provided for human readability and best-effort routing. Runtimes SHOULD log a portability warning when routing on a string condition."
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["lang"],
+          "properties": {
+            "lang": {
+              "type": "string",
+              "enum": ["jsonpath", "jmespath", "cel", "jsonlogic", "always", "never"],
+              "description": "Expression language. 'jsonpath'/'jmespath': query evaluated for truthiness against the input/payload; 'cel': Common Expression Language boolean; 'jsonlogic': a JsonLogic rule object; 'always'/'never': constant true/false (no expr needed). Runtimes MUST evaluate these deterministically."
+            },
+            "expr": {
+              "description": "The expression. A string for jsonpath/jmespath/cel, or an object for jsonlogic. Omitted for 'always'/'never'.",
+              "type": ["string", "object", "boolean"]
+            },
+            "nl": {
+              "type": "string",
+              "description": "Optional natural-language description of the condition for humans and logs. Advisory only — the structured 'expr' is authoritative."
+            }
+          },
+          "allOf": [
+            {
+              "if": { "properties": { "lang": { "enum": ["jsonpath", "jmespath", "cel", "jsonlogic"] } } },
+              "then": { "required": ["expr"] }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "properties": {
+    "_comment": {
+      "type": "string",
+      "description": "Non-normative human annotation (SPECIFICATION §W). Ignored by conforming runtimes; safe to strip. Use 'x-'-prefixed keys for machine-readable extensions."
+    },
+    "sc_standard": {
+      "const": "SC-006",
+      "description": "Schema Commons standard identifier — must be 'SC-006'."
+    },
+    "sc_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "default": "3.4.0",
+      "description": "AAIF schema version this document conforms to."
+    },
+    "agent_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Globally unique agent identifier (UUID v4). Assigned by the authoring platform; preserved on import."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "deprecated"],
+      "default": "active",
+      "description": "Lifecycle status. Runtimes SHOULD reject 'deprecated' agents unless explicitly overridden."
+    },
+    "tags": {
+      "type": "array",
+      "description": "Free-form labels for search, filtering, and capability-based routing.",
+      "items": { "type": "string" },
+      "uniqueItems": true
+    },
+    "agent": {
+      "type": "object",
+      "required": ["name", "goal"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable agent name."
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Semantic version of this agent definition (not the AAIF schema version)."
+        },
+        "description": {
+          "type": "string",
+          "description": "One-paragraph description of what the agent does and for whom."
+        },
+        "goal": {
+          "type": "string",
+          "description": "Primary objective — the single sentence that defines success for this agent."
+        },
+        "instructions": {
+          "type": "string",
+          "description": "System prompt / persona instructions injected before every conversation turn. Equivalent to AGENTS.md system block."
+        },
+        "skills": {
+          "type": "array",
+          "description": "Declarative capability tags used for capability-based routing and agent discovery (e.g. 'email', 'code-review', 'sql', 'web-search').",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+
+        "required_capabilities": {
+          "type": "array",
+          "description": "Runtime capabilities this agent requires. An importing platform MUST reject the agent (or warn loudly) if it cannot fulfil all declared capabilities. Use dot-namespaced strings from the standard capability vocabulary.",
+          "items": {
+            "type": "string",
+            "examples": [
+              "tool.function",
+              "tool.mcp",
+              "tool.http",
+              "tool.openapi",
+              "memory.vector",
+              "memory.redis",
+              "memory.postgres",
+              "orchestration.parallel",
+              "orchestration.handoff",
+              "orchestration.pipeline",
+              "orchestration.consensus",
+              "telemetry.otel",
+              "compliance.data_residency",
+              "compliance.hitl",
+              "io.streaming",
+              "io.async",
+              "io.batch",
+              "auth.vault"
+            ]
+          },
+          "uniqueItems": true
+        },
+
+        "model": {
+          "type": "object",
+          "description": "LLM configuration. All fields are preferences; receiving runtimes MAY substitute equivalents. Use 'fallbacks' and 'routing_strategy' to express provider-agnostic intent.",
+          "additionalProperties": false,
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "openai", "anthropic", "google", "vertex_ai", "mistral", "cohere",
+                "groq", "ollama", "azure_openai", "bedrock", "huggingface",
+                "together", "fireworks", "deepseek", "xai", "openrouter", "custom"
+              ],
+              "description": "Primary LLM provider. Use 'custom' for any provider or gateway not in this enum (e.g. GitHub Copilot, Cline-routed endpoints, self-hosted gateways) and name it via 'provider_id' + 'base_url'."
+            },
+            "provider_id": {
+              "type": "string",
+              "description": "Required when provider is 'custom': a stable identifier for the actual provider or gateway (e.g. 'copilot', 'openrouter', 'cline', 'litellm', 'vllm'). Lets a runtime route deterministically without a dedicated enum value."
+            },
+            "base_url": {
+              "type": "string",
+              "format": "uri",
+              "description": "Optional API base URL for self-hosted or gateway providers (typically OpenAI-compatible). Used with provider 'custom', 'ollama', or 'openrouter' to point the runtime at a specific endpoint."
+            },
+            "preferred": {
+              "type": "string",
+              "description": "Preferred model ID in provider's notation (e.g. 'gpt-4o', 'claude-opus-4-5', 'gemini-2.5-pro', 'mistral-large-latest', 'anthropic/claude-opus-4-5' for openrouter)."
+            },
+            "fallbacks": {
+              "type": "array",
+              "description": "Ordered list of fallback provider+model pairs to try if the preferred model is unavailable, rate-limited, or exceeds cost thresholds.",
+              "items": {
+                "type": "object",
+                "required": ["provider", "model"],
+                "additionalProperties": false,
+                "properties": {
+                  "provider": { "type": "string" },
+                  "model": { "type": "string" },
+                  "max_cost_usd_per_1k_tokens": {
+                    "type": "number",
+                    "description": "Only use this fallback if cost is below this threshold."
+                  }
+                }
+              }
+            },
+            "routing_strategy": {
+              "type": "string",
+              "enum": ["preferred_first", "cost", "latency", "quality", "round_robin"],
+              "default": "preferred_first",
+              "description": "How the runtime selects among available models. 'preferred_first' respects the declared order; others let the platform optimise."
+            },
+            "min_context_tokens": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Minimum context window required. The runtime MUST NOT route to a model with a smaller window."
+            },
+            "temperature": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "description": "Sampling temperature. Lower = more deterministic."
+            },
+            "params": {
+              "type": "object",
+              "description": "Additional sampling parameters forwarded to the model API.",
+              "additionalProperties": false,
+              "properties": {
+                "max_tokens": { "type": "integer", "minimum": 1 },
+                "top_p": { "type": "number", "minimum": 0, "maximum": 1 },
+                "frequency_penalty": { "type": "number", "minimum": -2, "maximum": 2 },
+                "presence_penalty": { "type": "number", "minimum": -2, "maximum": 2 },
+                "stop": { "type": "array", "items": { "type": "string" }, "maxItems": 4 },
+                "seed": { "type": "integer", "description": "Fixed seed for reproducible outputs." },
+                "extended": {
+                  "type": "object",
+                  "description": "Provider-specific sampling parameters not covered by the standard fields. The runtime forwards these verbatim to the provider API. Keys are provider-defined (e.g. {\"thinking\": {\"type\": \"enabled\", \"budget_tokens\": 5000}} for Anthropic extended thinking).",
+                  "additionalProperties": true
+                }
+              }
+            },
+            "response_format": {
+              "type": "string",
+              "enum": ["text", "json", "json_schema", "markdown"],
+              "default": "text",
+              "description": "Instruct the model to respond in this format. 'json_schema' means the agent's io.output_schema is enforced via structured output."
+            }
+          },
+          "allOf": [
+            {
+              "if": { "properties": { "provider": { "const": "custom" } }, "required": ["provider"] },
+              "then": { "required": ["provider_id"] }
+            }
+          ]
+        },
+
+        "orchestration": {
+          "type": "object",
+          "description": "Multi-agent topology configuration. Defines whether this agent is an orchestrator, worker, evaluator, etc., and how it delegates to or accepts delegation from other agents.",
+          "additionalProperties": false,
+          "properties": {
+            "role": {
+              "type": "string",
+              "enum": ["orchestrator", "worker", "evaluator", "router", "synthesizer"],
+              "description": "Role in the multi-agent system. 'orchestrator' coordinates subagents; 'worker' executes tasks; 'evaluator' scores outputs; 'router' decides which agent to call; 'synthesizer' merges multi-agent outputs."
+            },
+            "subagents": {
+              "type": "array",
+              "description": "Child agents this orchestrator may invoke. The orchestrator dispatches tasks to these agents by ref.",
+              "items": {
+                "type": "object",
+                "required": ["ref"],
+                "additionalProperties": false,
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "description": "Agent ID (UUID) or resolvable URI of the subagent definition."
+                  },
+                  "alias": {
+                    "type": "string",
+                    "description": "Short name for referencing this subagent in instructions."
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": ["worker", "evaluator", "specialist", "fallback"],
+                    "description": "How this subagent participates in the pipeline."
+                  },
+                  "when": {
+                    "$ref": "#/$defs/condition",
+                    "description": "Condition for invoking this subagent. Prefer the structured form (e.g. {\"lang\":\"jsonpath\",\"expr\":\"$.task.type\",\"nl\":\"task type is code_review\"} or {\"lang\":\"always\"}); a bare string is treated as a non-deterministic hint. See §V."
+                  },
+                  "pass_memory_keys": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "List of memory keys to forward to the subagent on invocation."
+                  }
+                }
+              }
+            },
+            "handoff": {
+              "type": "array",
+              "description": "Rules for handing off execution context to another agent mid-run.",
+              "items": {
+                "type": "object",
+                "required": ["condition", "target_agent"],
+                "additionalProperties": false,
+                "properties": {
+                  "condition": {
+                    "$ref": "#/$defs/condition",
+                    "description": "Condition that triggers this handoff. Prefer the structured form for deterministic routing; a bare string is a non-deterministic hint. See §V."
+                  },
+                  "target_agent": {
+                    "type": "string",
+                    "description": "Agent ID or alias of the receiving agent."
+                  },
+                  "pass_context": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether to forward the current conversation context to the receiving agent."
+                  },
+                  "pass_memory": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to forward long_term memory to the receiving agent."
+                  }
+                }
+              }
+            },
+            "pipeline": {
+              "type": "array",
+              "description": "Ordered sequence of subagent refs (aliases or IDs) for deterministic pipeline execution. Each agent's output becomes the next agent's input.",
+              "items": { "type": "string" }
+            },
+            "parallel_execution": {
+              "type": "boolean",
+              "default": false,
+              "description": "When true, invoke all subagents in parallel (fan-out) instead of sequentially. Results are collected and passed to a synthesizer or merged by the orchestrator."
+            },
+            "max_iterations": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 10,
+              "description": "Maximum agentic iterations (tool-call/reflect cycles) before the agent halts. Prevents infinite loops."
+            },
+            "consensus": {
+              "type": "object",
+              "description": "Strategy for reaching agreement when multiple subagents produce conflicting outputs.",
+              "additionalProperties": false,
+              "properties": {
+                "strategy": {
+                  "type": "string",
+                  "enum": ["majority_vote", "best_of_n", "referee", "first_success"],
+                  "description": "'majority_vote': most common answer wins; 'best_of_n': evaluator picks best; 'referee': a separate judge agent decides; 'first_success': accept the first non-error response."
+                },
+                "min_votes": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "Minimum agreeing votes required (for majority_vote)."
+                },
+                "referee_agent": {
+                  "type": "string",
+                  "description": "Agent ID or alias of the referee (for 'referee' strategy)."
+                }
+              }
+            }
+          }
+        },
+
+        "context": {
+          "type": "array",
+          "description": "Background knowledge injected into the agent's context window. Supports inline text, files, URLs, datasets, and references to other Schema Commons standards.",
+          "items": {
+            "type": "object",
+            "required": ["type", "value"],
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["text", "file", "url", "dataset", "schema_ref"],
+                "description": "'text': inline content; 'file': local file path; 'url': fetched at runtime; 'dataset': named dataset reference; 'schema_ref': JSON Schema URI (e.g. another SC standard)."
+              },
+              "label": { "type": "string", "description": "Human-readable label for this context item." },
+              "value": { "type": "string", "description": "Inline text, file path, URL, or schema URI." },
+              "description": { "type": "string", "description": "Why this context is needed." },
+              "refresh_ttl_seconds": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "For 'url' type: how often to re-fetch. 0 = once at startup."
+              }
+            }
+          }
+        },
+
+        "tools": {
+          "type": "array",
+          "description": "Tools the agent may call. Supports function calling (OpenAI/Anthropic style), MCP servers, raw HTTP, and OpenAPI specs. The runtime MUST gate tool access before execution.",
+          "items": {
+            "type": "object",
+            "required": ["name", "description"],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[a-zA-Z_][a-zA-Z0-9_-]{0,63}$",
+                "description": "Tool name — valid Python/JS identifier, used in function-call payloads."
+              },
+              "description": {
+                "type": "string",
+                "description": "What the tool does. The LLM uses this to decide when to call it."
+              },
+              "protocol": {
+                "type": "string",
+                "enum": ["function", "mcp", "http", "openapi"],
+                "description": "'function': in-process callable; 'mcp': Model Context Protocol server; 'http': raw REST call; 'openapi': full OpenAPI spec endpoint."
+              },
+              "parameters_schema": {
+                "type": "object",
+                "description": "JSON Schema (draft 2020-12 or OpenAI function-calling subset) describing tool inputs. Required for Tooled conformance."
+              },
+              "output_schema": {
+                "type": "object",
+                "description": "JSON Schema for the tool's response. Helps the agent parse and validate outputs."
+              },
+              "endpoint": {
+                "type": "string",
+                "description": "URI for http/openapi tools, or 'mcp://<server>/<resource>' for MCP tools."
+              },
+              "auth": {
+                "type": "object",
+                "description": "Authentication config for this tool. Secrets are resolved from env vars or an external vault — never embed secret values in the definition.",
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["none", "bearer", "api_key", "basic", "oauth2", "aws_sigv4"],
+                    "default": "none"
+                  },
+                  "env_var": {
+                    "type": "string",
+                    "description": "Name of the environment variable containing the secret (e.g. 'SENDGRID_API_KEY'). Used when vault_ref is not set."
+                  },
+                  "vault_ref": {
+                    "type": "object",
+                    "description": "Reference to a secret stored in an external vault. Takes precedence over env_var if both are specified. The runtime resolves the value at execution time using the platform's configured vault credentials.",
+                    "additionalProperties": false,
+                    "required": ["provider", "path"],
+                    "properties": {
+                      "provider": {
+                        "type": "string",
+                        "enum": ["aws_secretsmanager", "hashicorp_vault", "azure_keyvault", "gcp_secretmanager", "1password", "custom"],
+                        "description": "Vault provider."
+                      },
+                      "path": {
+                        "type": "string",
+                        "description": "Secret path, ARN, or vault URI (e.g. 'arn:aws:secretsmanager:eu-west-1:123456789:secret:prod/agents/sendgrid', 'secret/data/agents/sendgrid', 'https://myvault.vault.azure.net/secrets/sendgrid-key')."
+                      },
+                      "key": {
+                        "type": "string",
+                        "description": "Key within the secret if it is a JSON map (e.g. 'api_key'). Omit if the secret value is a plain string."
+                      },
+                      "version": {
+                        "type": "string",
+                        "description": "Secret version or version stage (e.g. 'AWSCURRENT', '1', 'latest'). Defaults to the latest active version."
+                      }
+                    }
+                  },
+                  "header": {
+                    "type": "string",
+                    "description": "HTTP header name for api_key auth (e.g. 'X-API-Key')."
+                  },
+                  "scopes": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "OAuth2 scopes required."
+                  },
+                  "token_url": {
+                    "type": "string",
+                    "description": "OAuth2 token endpoint URL."
+                  }
+                }
+              },
+              "cache_ttl_seconds": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Cache successful tool responses for this many seconds. 0 = no cache."
+              },
+              "timeout_seconds": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Tool call timeout. The runtime MUST abort and return an error after this duration."
+              },
+              "rate_limit": {
+                "type": "object",
+                "additionalProperties": false,
+                "description": "Outbound rate limits the runtime enforces when calling this tool.",
+                "properties": {
+                  "requests_per_minute": { "type": "integer", "minimum": 1 },
+                  "tokens_per_minute": { "type": "integer", "minimum": 1 }
+                }
+              }
+            }
+          }
+        },
+
+        "memory": {
+          "type": "array",
+          "description": "Memory items and memory configuration. Each item declares a scope, optional backend, and content. Runtimes MUST respect scope boundaries and SHOULD NOT persist 'session' memory beyond the session.",
+          "items": {
+            "type": "object",
+            "required": ["scope", "content"],
+            "additionalProperties": false,
+            "properties": {
+              "scope": {
+                "type": "string",
+                "enum": ["user", "session", "task", "long_term"],
+                "description": "'user': per-user persistent; 'session': current conversation only; 'task': scoped to one agentic run; 'long_term': agent-global persistent."
+              },
+              "key": {
+                "type": "string",
+                "description": "Lookup key for this memory item."
+              },
+              "content": {
+                "type": "string",
+                "description": "The memory content (text, JSON string, or description of a vector store reference)."
+              },
+              "backend": {
+                "type": "string",
+                "enum": ["in_memory", "redis", "postgres", "sqlite", "pinecone", "weaviate", "qdrant", "chroma", "custom"],
+                "description": "Storage backend. The runtime selects a compatible backend if this is unavailable."
+              },
+              "ttl_seconds": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Time-to-live in seconds. 0 = never expire."
+              },
+              "embedding_model": {
+                "type": "string",
+                "description": "Embedding model for vector memory backends (e.g. 'text-embedding-3-small', 'nomic-embed-text')."
+              },
+              "retrieval_strategy": {
+                "type": "string",
+                "enum": ["similarity", "keyword", "hybrid", "recency"],
+                "description": "How relevant memories are retrieved."
+              },
+              "top_k": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 5,
+                "description": "Number of memory items to retrieve per query."
+              }
+            }
+          }
+        },
+
+        "constraints": {
+          "type": "array",
+          "description": "Hard rules and guardrails. Runtimes MUST enforce these; dropping a constraint is a conformance violation. These are injected into the system prompt and enforced at the platform level.",
+          "items": { "type": "string" },
+          "minItems": 0
+        },
+
+        "io": {
+          "type": "object",
+          "description": "Input/output contract for this agent when invoked programmatically.",
+          "additionalProperties": false,
+          "properties": {
+            "input_schema": {
+              "type": "object",
+              "description": "JSON Schema for the agent's input payload."
+            },
+            "output_schema": {
+              "type": "object",
+              "description": "JSON Schema for the agent's output payload. Used with model.response_format='json_schema' for structured output enforcement."
+            },
+            "streaming": {
+              "type": "boolean",
+              "default": false,
+              "description": "Whether the agent streams partial output tokens."
+            },
+            "format": {
+              "type": "string",
+              "enum": ["text", "json", "markdown", "structured"],
+              "default": "text",
+              "description": "Preferred output format."
+            },
+            "mode": {
+              "type": "string",
+              "enum": ["sync", "async", "batch"],
+              "default": "sync",
+              "description": "'sync': caller blocks until done; 'async': returns a job ID immediately; 'batch': accepts a list of inputs."
+            }
+          }
+        },
+
+        "events": {
+          "type": "object",
+          "description": "Trigger and lifecycle hook configuration.",
+          "additionalProperties": false,
+          "properties": {
+            "triggers": {
+              "type": "array",
+              "description": "Conditions that cause this agent to be invoked automatically.",
+              "items": {
+                "type": "object",
+                "required": ["type"],
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["manual", "schedule", "webhook", "message", "event", "agent_handoff", "file_change"],
+                    "description": "Trigger mechanism."
+                  },
+                  "schedule": {
+                    "type": "string",
+                    "description": "Cron expression (UTC) for schedule triggers (e.g. '0 9 * * 1-5' = weekdays at 09:00)."
+                  },
+                  "event_name": {
+                    "type": "string",
+                    "description": "Event name to subscribe to (for 'event' triggers)."
+                  },
+                  "webhook_path": {
+                    "type": "string",
+                    "description": "Relative webhook path (for 'webhook' triggers)."
+                  },
+                  "filter": {
+                    "$ref": "#/$defs/condition",
+                    "description": "Filter applied to the trigger payload. Prefer the structured form (e.g. {\"lang\":\"cel\",\"expr\":\"action == 'opened' || action == 'synchronize'\"}); a bare string is a non-deterministic hint. See §V."
+                  }
+                }
+              }
+            },
+            "on_start": {
+              "type": "string",
+              "description": "Action or function name to call when the agent starts."
+            },
+            "on_complete": {
+              "type": "string",
+              "description": "Action or function name to call on successful completion."
+            },
+            "on_error": {
+              "type": "string",
+              "description": "Action or function name to call on failure."
+            },
+            "on_tool_call": {
+              "type": "string",
+              "description": "Middleware hook invoked before every tool call (e.g. for logging or approval)."
+            }
+          }
+        },
+
+        "runtime": {
+          "type": "object",
+          "description": "Execution environment and resilience configuration.",
+          "additionalProperties": false,
+          "properties": {
+            "timeout_seconds": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Maximum wall-clock seconds for a complete agent run. The runtime MUST abort after this."
+            },
+            "max_retries": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 2,
+              "description": "Number of automatic retries on transient failure."
+            },
+            "retry_backoff": {
+              "type": "string",
+              "enum": ["fixed", "linear", "exponential"],
+              "default": "exponential",
+              "description": "Backoff strategy between retries."
+            },
+            "concurrency": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "description": "Maximum concurrent instances of this agent."
+            },
+            "streaming": {
+              "type": "boolean",
+              "default": false,
+              "description": "Request streaming LLM responses from the provider."
+            },
+            "async_execution": {
+              "type": "boolean",
+              "default": false,
+              "description": "Run the agent asynchronously, returning a job ID to the caller."
+            },
+            "queue": {
+              "type": "string",
+              "description": "Named queue for async execution (e.g. 'high-priority', 'batch')."
+            },
+            "environment": {
+              "type": "string",
+              "enum": ["production", "staging", "development", "test"],
+              "default": "production"
+            }
+          }
+        },
+
+        "telemetry": {
+          "type": "object",
+          "description": "Observability configuration. Runtimes SHOULD emit traces and metrics using these settings.",
+          "additionalProperties": false,
+          "properties": {
+            "tracing": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable distributed tracing (OpenTelemetry). Each agent run becomes a root span."
+            },
+            "log_level": {
+              "type": "string",
+              "enum": ["debug", "info", "warn", "error"],
+              "default": "info"
+            },
+            "metrics": {
+              "type": "boolean",
+              "default": true,
+              "description": "Emit Prometheus-compatible metrics (latency, token usage, error rate, tool call counts)."
+            },
+            "trace_context_header": {
+              "type": "string",
+              "default": "traceparent",
+              "description": "W3C Trace Context header name for propagating trace IDs across agent boundaries."
+            },
+            "otlp_endpoint": {
+              "type": "string",
+              "description": "OpenTelemetry collector endpoint (e.g. 'http://otel-collector:4317'). If omitted, use the platform's default."
+            }
+          }
+        },
+
+        "evaluation": {
+          "type": "object",
+          "description": "Quality evaluation config for CI/CD gates, online monitoring, and LLM-as-judge scoring.",
+          "additionalProperties": false,
+          "properties": {
+            "judge_model": {
+              "type": "string",
+              "description": "Model ID used as the LLM-as-judge evaluator (e.g. 'gpt-4o', 'claude-opus-4-5'). Should be equal or stronger than the agent model."
+            },
+            "metrics": {
+              "type": "array",
+              "description": "Evaluation metrics and pass/fail thresholds.",
+              "items": {
+                "type": "object",
+                "required": ["name"],
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "enum": [
+                      "faithfulness", "relevance", "coherence", "toxicity",
+                      "hallucination_rate", "task_completion", "latency_ms",
+                      "cost_usd_per_run", "tool_call_accuracy", "custom"
+                    ]
+                  },
+                  "threshold": {
+                    "type": "number",
+                    "description": "Minimum acceptable score (0–1 for quality metrics, or absolute value for latency/cost)."
+                  },
+                  "custom_name": {
+                    "type": "string",
+                    "description": "Name for 'custom' metric type."
+                  }
+                }
+              }
+            },
+            "test_cases": {
+              "type": "array",
+              "description": "Golden-set test cases used for regression testing and CI/CD gates.",
+              "items": {
+                "type": "object",
+                "required": ["id", "input"],
+                "additionalProperties": false,
+                "properties": {
+                  "id": { "type": "string" },
+                  "input": { "description": "Test input (any type matching io.input_schema)." },
+                  "expected_output": { "description": "Reference output for similarity scoring." },
+                  "criteria": {
+                    "type": "string",
+                    "description": "Plain-language evaluation criteria for the LLM judge (e.g. 'Response must include all invoice numbers and be polite')."
+                  }
+                }
+              }
+            }
+          }
+        },
+
+        "compliance": {
+          "type": "object",
+          "description": "Compliance and data governance settings. Used by enterprise multi-agent platforms to enforce policy.",
+          "additionalProperties": false,
+          "properties": {
+            "safety_level": {
+              "type": "string",
+              "enum": ["minimal", "standard", "strict", "regulated"],
+              "default": "standard",
+              "description": "'minimal': basic prompt injection guard; 'standard': adds output filtering; 'strict': human-in-the-loop for sensitive actions; 'regulated': full audit trail + approval workflows."
+            },
+            "data_residency": {
+              "type": "string",
+              "enum": ["global", "EU", "US", "UK", "APAC", "custom"],
+              "description": "Data must not leave this region. Runtimes MUST NOT route to providers outside this region."
+            },
+            "pii_handling": {
+              "type": "string",
+              "enum": ["none", "detect", "anonymize", "encrypt", "reject"],
+              "default": "detect",
+              "description": "How the runtime handles PII in inputs and outputs."
+            },
+            "audit_log": {
+              "type": "boolean",
+              "default": false,
+              "description": "Require an immutable audit log of all agent invocations, inputs, outputs, and tool calls."
+            },
+            "human_in_the_loop": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Human approval requirements before the agent takes irreversible actions.",
+              "properties": {
+                "enabled": { "type": "boolean", "default": false },
+                "trigger": {
+                  "$ref": "#/$defs/condition",
+                  "description": "Condition that requires human approval. Prefer the structured form (e.g. {\"lang\":\"cel\",\"expr\":\"confidence < 0.8\"}); a bare string such as 'before any write tool call' is a non-deterministic hint. See §V."
+                },
+                "timeout_seconds": {
+                  "type": "integer",
+                  "description": "How long to wait for human approval before aborting or using a default action."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "provenance": {
+      "type": "object",
+      "description": "Origin, authorship, and integrity metadata.",
+      "additionalProperties": false,
+      "properties": {
+        "authored_by": {
+          "type": "string",
+          "description": "Author identifier (username, email, or DID)."
+        },
+        "source_platform": {
+          "type": "string",
+          "description": "Platform where this agent was originally created (e.g. 'Open WebUI', 'LangGraph', 'CrewAI', 'AutoGen')."
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 creation timestamp (UTC)."
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 last-modified timestamp (UTC)."
+        },
+        "license": {
+          "type": "string",
+          "description": "SPDX license identifier or URL for this agent definition (e.g. 'CC-BY-4.0', 'MIT', 'proprietary')."
+        },
+        "sc_refs": {
+          "type": "array",
+          "description": "Other Schema Commons standards this agent depends on (e.g. ['SC-005', 'SC-001']).",
+          "items": { "type": "string" }
+        },
+        "signature": {
+          "type": "string",
+          "description": "Optional base64-encoded cryptographic signature (Ed25519) over the canonical JSON of this document. Enables trust verification on import."
+        }
+      }
+    }
+  }
+}

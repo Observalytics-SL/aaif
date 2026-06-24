@@ -1,0 +1,18 @@
+{
+  "registry": "aaif-memory-backends",
+  "sc_standard": "SC-006",
+  "description": "Storage backends for memory[].backend (SPECIFICATION §H). A runtime that does not have the named backend SHOULD substitute a compatible one (e.g. another vector store) unless the agent pins it via required_capabilities[].",
+  "registration_policy": "Specification Required (public client/driver).",
+  "updated_at": "2026-06-11",
+  "entries": [
+    { "id": "in_memory", "status": "standard", "since": "2.0.0", "kind": "ephemeral",   "vector": false, "notes": "Lost on restart." },
+    { "id": "redis",     "status": "standard", "since": "2.0.0", "kind": "key_value",   "vector": false, "notes": "TTL-friendly; good for session/task." },
+    { "id": "postgres",  "status": "standard", "since": "2.0.0", "kind": "relational",  "vector": false, "notes": "Good for user/long_term; pgvector adds vector." },
+    { "id": "sqlite",    "status": "standard", "since": "2.0.0", "kind": "relational",  "vector": false, "notes": "Single-file local persistence." },
+    { "id": "pinecone",  "status": "standard", "since": "2.0.0", "kind": "vector",      "vector": true,  "notes": "Cloud vector search." },
+    { "id": "weaviate",  "status": "standard", "since": "2.0.0", "kind": "vector",      "vector": true,  "notes": "Hybrid vector+keyword." },
+    { "id": "qdrant",    "status": "standard", "since": "2.0.0", "kind": "vector",      "vector": true,  "notes": "Open-source vector." },
+    { "id": "chroma",    "status": "standard", "since": "2.0.0", "kind": "vector",      "vector": true,  "notes": "Embedded vector, zero-infra." },
+    { "id": "custom",    "status": "standard", "since": "2.0.0", "kind": "other",       "vector": null,  "notes": "Runtime-defined backend." }
+  ]
+}

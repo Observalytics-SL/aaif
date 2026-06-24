@@ -1,0 +1,40 @@
+cff-version: 1.2.0
+title: "AAIF — Autonomous Agent Interchange Format (Schema Commons SC-006)"
+message: "If you use AAIF, please cite it using these metadata."
+type: dataset
+abstract: >-
+  AAIF is an open, vendor-neutral standard for declaring AI agents so that an
+  agent defined on one runtime can be imported and executed on another. It
+  standardises the declaration of an agent — identity, model preferences and
+  provider routing, tool catalogue (function/MCP/HTTP/OpenAPI), memory
+  backends, multi-agent orchestration topology, deterministic routing
+  conditions, runtime policy, telemetry, evaluation, compliance, provenance,
+  and portable live state — independent of any single LLM vendor or agent
+  framework. It is published as JSON Schema 2020-12 plus a JSON-LD context,
+  with community-maintained extension registries and a self-certification
+  conformance program.
+keywords:
+  - artificial intelligence
+  - LLM agents
+  - multi-agent systems
+  - interoperability
+  - open standard
+  - agent portability
+  - Model Context Protocol
+  - JSON Schema
+authors:
+  - given-names: "Schema Commons"
+    name-particle: ""
+    family-names: "Contributors"
+license: CC-BY-4.0
+version: "3.4.0"
+date-released: "2026-06-11"
+repository-code: "https://github.com/Observalytics-SL/Frameworks"
+url: "https://github.com/Observalytics-SL/Frameworks/tree/main/SC-006-agent-interchange-format"
+identifiers:
+  - type: other
+    value: "SC-006"
+    description: "Schema Commons standard identifier."
+  - type: doi
+    value: "10.5281/zenodo.0000000"
+    description: "Placeholder Zenodo DOI — replace with the minted DOI on first archived release."

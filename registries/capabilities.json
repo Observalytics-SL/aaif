@@ -1,0 +1,33 @@
+{
+  "registry": "aaif-capabilities",
+  "sc_standard": "SC-006",
+  "description": "Canonical vocabulary for agent.required_capabilities[] and platform manifest capability advertisement (SPECIFICATION §R, §U). Dot-namespaced '<category>.<capability>' strings. Platforms declare which of these they support; agents declare which they require; orchestrators match the two before dispatch.",
+  "registration_policy": "Expert Review. New capabilities must be orthogonal to existing ones and reference the spec section that defines the behaviour they gate.",
+  "updated_at": "2026-06-11",
+  "entries": [
+    { "id": "tool.function",           "category": "tool",          "status": "standard", "since": "2.0.0", "spec": "§G", "meaning": "In-process function calling." },
+    { "id": "tool.mcp",                "category": "tool",          "status": "standard", "since": "2.0.0", "spec": "§G", "meaning": "Model Context Protocol tool invocation." },
+    { "id": "tool.http",               "category": "tool",          "status": "standard", "since": "2.0.0", "spec": "§G", "meaning": "Raw HTTP tool calls." },
+    { "id": "tool.openapi",            "category": "tool",          "status": "standard", "since": "2.0.0", "spec": "§G", "meaning": "OpenAPI spec parsing and invocation." },
+    { "id": "memory.vector",           "category": "memory",        "status": "standard", "since": "2.0.0", "spec": "§H", "meaning": "Any vector storage backend." },
+    { "id": "memory.redis",            "category": "memory",        "status": "standard", "since": "2.0.0", "spec": "§H", "meaning": "Redis backend." },
+    { "id": "memory.postgres",         "category": "memory",        "status": "standard", "since": "2.0.0", "spec": "§H", "meaning": "PostgreSQL backend." },
+    { "id": "memory.pinecone",         "category": "memory",        "status": "standard", "since": "2.0.0", "spec": "§H", "meaning": "Pinecone vector backend." },
+    { "id": "memory.qdrant",           "category": "memory",        "status": "standard", "since": "2.0.0", "spec": "§H", "meaning": "Qdrant vector backend." },
+    { "id": "orchestration.parallel",  "category": "orchestration", "status": "standard", "since": "2.0.0", "spec": "§E", "meaning": "Parallel subagent fan-out." },
+    { "id": "orchestration.handoff",   "category": "orchestration", "status": "standard", "since": "2.0.0", "spec": "§E", "meaning": "Mid-run handoff between agents." },
+    { "id": "orchestration.pipeline",  "category": "orchestration", "status": "standard", "since": "2.0.0", "spec": "§E", "meaning": "Sequential pipeline execution." },
+    { "id": "orchestration.consensus", "category": "orchestration", "status": "standard", "since": "2.0.0", "spec": "§E", "meaning": "Consensus/voting mechanisms." },
+    { "id": "condition.structured",    "category": "condition",     "status": "standard", "since": "3.2.0", "spec": "§V", "meaning": "Deterministic structured Condition evaluation. Pair with condition-languages registry to declare which langs." },
+    { "id": "telemetry.otel",          "category": "telemetry",     "status": "standard", "since": "2.0.0", "spec": "§J", "meaning": "OpenTelemetry tracing." },
+    { "id": "compliance.data_residency","category": "compliance",   "status": "standard", "since": "2.0.0", "spec": "§L", "meaning": "Enforced data-residency routing." },
+    { "id": "compliance.hitl",         "category": "compliance",    "status": "standard", "since": "2.0.0", "spec": "§L", "meaning": "Human-in-the-loop approval gates." },
+    { "id": "compliance.audit_log",    "category": "compliance",    "status": "standard", "since": "2.0.0", "spec": "§L", "meaning": "Immutable audit logging." },
+    { "id": "io.streaming",            "category": "io",            "status": "standard", "since": "2.0.0", "spec": "§D", "meaning": "Streaming token output." },
+    { "id": "io.async",                "category": "io",            "status": "standard", "since": "2.0.0", "spec": "§D", "meaning": "Async execution with job ID." },
+    { "id": "io.batch",                "category": "io",            "status": "standard", "since": "2.0.0", "spec": "§D", "meaning": "Batch input mode." },
+    { "id": "auth.vault",              "category": "auth",          "status": "standard", "since": "2.1.0", "spec": "§L", "meaning": "External vault secret resolution (vault_ref)." },
+    { "id": "state.checkpoint",        "category": "state",         "status": "standard", "since": "3.0.0", "spec": "§Q", "meaning": "Agent State checkpoint capture." },
+    { "id": "state.restore",           "category": "state",         "status": "standard", "since": "3.0.0", "spec": "§Q", "meaning": "Agent State restore and resume." }
+  ]
+}

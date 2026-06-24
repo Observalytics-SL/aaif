@@ -1,0 +1,1277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE rfc [
+  <!ENTITY nbsp    "&#160;">
+]>
+<rfc xmlns:xi="http://www.w3.org/2001/XInclude"
+     category="info"
+     docName="draft-schemacommons-aaif-00"
+     ipr="trust200902"
+     submissionType="independent"
+     xml:lang="en"
+     version="3">
+
+  <front>
+    <title abbrev="AAIF">Autonomous Agent Interchange Format (AAIF)</title>
+    <seriesInfo name="Internet-Draft" value="draft-schemacommons-aaif-00"/>
+
+    <author initials="B." surname="van Bussel" fullname="Bob van Bussel">
+      <organization>Observalytics SL</organization>
+      <address>
+        <email>bob@observalytics.com</email>
+        <uri>https://github.com/Observalytics-SL</uri>
+      </address>
+    </author>
+
+    <date year="2026" month="June"/>
+    <area>ART</area>
+
+    <keyword>AI agents</keyword>
+    <keyword>multi-agent systems</keyword>
+    <keyword>LLM</keyword>
+    <keyword>interoperability</keyword>
+    <keyword>agent portability</keyword>
+    <keyword>JSON Schema</keyword>
+    <keyword>Model Context Protocol</keyword>
+    <keyword>orchestration</keyword>
+
+    <abstract>
+      <t>
+        The Autonomous Agent Interchange Format (AAIF) is an open, vendor-neutral
+        specification for the portable definition of artificial intelligence agents.
+        An AAIF document encapsulates an agent's identity, goal, system instructions,
+        large language model (LLM) provider preferences and fallback routing,
+        multi-agent orchestration topology (sequential pipeline, parallel swarm,
+        dynamic routing, and mid-run handoff), tool catalogue (supporting function,
+        MCP, HTTP, and OpenAPI protocols with structured authentication), memory
+        configuration, runtime policy, OpenTelemetry telemetry settings, LLM-as-judge
+        evaluation criteria, and compliance controls including data residency and
+        human-in-the-loop approval.
+      </t>
+      <t>
+        An agent defined in AAIF can be validated offline, committed to version control,
+        and imported into any conforming runtime regardless of the original authoring
+        environment.  This document describes the AAIF data model, field semantics,
+        conformance levels, capability negotiation protocol, and the companion Agent
+        State checkpoint schema that enables cross-platform live migration of running
+        agents.
+      </t>
+    </abstract>
+  </front>
+
+  <middle>
+
+    <!-- ============================================================ -->
+    <section anchor="introduction" numbered="true" toc="default">
+      <name>Introduction</name>
+      <t>
+        The multi-agent LLM platform ecosystem, as of mid-2026, comprises more than
+        a dozen actively developed frameworks: LangGraph, CrewAI, AutoGen, Open WebUI,
+        Cline, Semantic Kernel, BeeAI, Haystack, DSPy, Agno, and the native agent APIs
+        of OpenAI, Anthropic, and Google.  Each framework has defined its own concept
+        of an agent and its own storage format.  An agent authored for LangGraph cannot
+        be imported into CrewAI.  A definition written for Open WebUI is unreadable by
+        AutoGen.  Every platform has solved the same problem in an incompatible way,
+        and the developer is the primary victim of that incompatibility.
+      </t>
+      <t>
+        This fragmentation has direct operational consequences.  Agent definitions
+        encode business logic: the instructions that shape an AI's persona, the
+        constraints that prevent harmful actions, the tools the agent may call and the
+        authentication credentials it uses, and the compliance rules it must follow.
+        When that logic is locked inside a proprietary format, it cannot be audited
+        independently, cannot be migrated without manual recreation, and cannot be
+        shared across team boundaries that use different tooling.  An agent definition
+        is becoming a new kind of compliance artefact, with the same importance as a
+        data processing agreement or terms-of-service document.  It deserves the same
+        portability.
+      </t>
+      <t>
+        Analogous fragmentation problems have been solved before.  Database connectors
+        fragmented until ODBC.  Email clients fragmented until SMTP and MIME.  Calendar
+        applications fragmented until iCalendar <xref target="RFC5545"/>.  Container
+        deployments fragmented until the Open Container Initiative image format.  In
+        every case, the industry converged on a shared definition format because the
+        cost of incompatibility became high enough that a neutral standard was the
+        rational choice for all parties.  The multi-agent LLM market is approaching
+        that inflection point.
+      </t>
+      <t>
+        This document specifies the Autonomous Agent Interchange Format (AAIF), a
+        portable, vendor-neutral definition format for AI agents.  AAIF standardises
+        the declaration of an agent — its identity, capabilities, and constraints —
+        not its execution loop, so that a definition created in one runtime can be
+        imported and executed in any other conforming runtime.
+      </t>
+
+      <section anchor="requirements-language" numbered="true" toc="default">
+        <name>Requirements Language</name>
+        <t>
+          The key words "<bcp14>MUST</bcp14>", "<bcp14>MUST NOT</bcp14>",
+          "<bcp14>REQUIRED</bcp14>", "<bcp14>SHALL</bcp14>",
+          "<bcp14>SHALL NOT</bcp14>", "<bcp14>SHOULD</bcp14>",
+          "<bcp14>SHOULD NOT</bcp14>", "<bcp14>RECOMMENDED</bcp14>",
+          "<bcp14>NOT RECOMMENDED</bcp14>", "<bcp14>MAY</bcp14>", and
+          "<bcp14>OPTIONAL</bcp14>" in this document are to be interpreted as
+          described in BCP 14 <xref target="RFC2119"/> <xref target="RFC8174"/>
+          when, and only when, they appear in all capitals, as shown here.
+        </t>
+      </section>
+
+      <section anchor="scope" numbered="true" toc="default">
+        <name>Scope</name>
+        <t>
+          AAIF is in scope for: agent name, goal, and system instructions; LLM
+          provider preferences and multi-provider fallback routing; tool catalogue
+          with protocol and authentication declarations; memory backend configuration;
+          multi-agent orchestration topology; runtime policy (timeout, retry, concurrency);
+          telemetry endpoints; evaluation criteria and golden test cases; compliance
+          controls (data residency, PII handling, human-in-the-loop approval, audit
+          logging); and agent provenance including cryptographic signature.
+        </t>
+        <t>
+          AAIF is out of scope for: the agent execution loop itself; billing and
+          metering; provider-specific internal optimisations; and streaming response
+          wire formats between an agent and an end user (as opposed to agent-to-agent
+          state handoff, which is in scope for the Agent State schema described in
+          <xref target="agent-state"/>).
+        </t>
+      </section>
+    </section>
+
+    <!-- ============================================================ -->
+    <section anchor="terminology" numbered="true" toc="default">
+      <name>Terminology</name>
+      <dl newline="false" spacing="normal">
+        <dt>AAIF document</dt>
+        <dd>
+          A JSON (or CBOR, see <xref target="binary-encoding"/>) instance conforming
+          to one of the three AAIF schemas: agent definition, Agent State, or platform
+          manifest.
+        </dd>
+        <dt>Agent definition</dt>
+        <dd>
+          The primary AAIF document type: the complete portable declaration of one
+          agent, validated against agent.schema.json.
+        </dd>
+        <dt>Producer</dt>
+        <dd>
+          Software that emits AAIF documents (an exporter from a native agent
+          framework).
+        </dd>
+        <dt>Consumer</dt>
+        <dd>
+          Software that imports an AAIF document and executes or enforces it (a
+          runtime).
+        </dd>
+        <dt>Conformance level</dt>
+        <dd>
+          One of the seven cumulative conformance levels defined in
+          <xref target="conformance"/> that a Producer or Consumer claims.
+        </dd>
+        <dt>Condition</dt>
+        <dd>
+          The structured-or-string routing and gating type used in orchestration
+          handoff conditions, subagent selection predicates, event filters, and
+          human-in-the-loop triggers.  See <xref target="conditions"/>.
+        </dd>
+        <dt>Capability</dt>
+        <dd>
+          A dot-namespaced runtime feature string an agent may declare as required
+          via agent.required_capabilities[] and a platform may advertise in its
+          Platform Manifest.  See <xref target="capability-negotiation"/>.
+        </dd>
+        <dt>Platform Manifest</dt>
+        <dd>
+          A machine-readable AAIF document (platform-manifest.schema.json) published
+          by a runtime that declares its supported capabilities, conformance level, and
+          intake endpoint.
+        </dd>
+      </dl>
+    </section>
+
+    <!-- ============================================================ -->
+    <section anchor="design-principles" numbered="true" toc="default">
+      <name>Design Principles</name>
+      <t>AAIF is built on seven design principles:</t>
+      <ol spacing="normal" type="1">
+        <li>
+          <strong>Declare, don't bind.</strong>  Model and tools are preferences;
+          Consumers <bcp14>MAY</bcp14> substitute equivalent alternatives when the
+          declared option is unavailable.
+        </li>
+        <li>
+          <strong>Provider-agnostic routing.</strong>  The fallback chain and routing
+          strategy express intent across any LLM provider without hard-coding one.
+          The consumer implements the routing layer.
+        </li>
+        <li>
+          <strong>Tool-protocol agnostic.</strong>  Function, MCP <xref target="MCP"/>,
+          HTTP, and OpenAPI tool protocols are supported in a unified tool object.
+        </li>
+        <li>
+          <strong>Safety first-class.</strong>  Constraints and compliance fields are
+          normative; Consumers <bcp14>MUST</bcp14> enforce them.  Silent constraint
+          stripping is a conformance violation.
+        </li>
+        <li>
+          <strong>Composable.</strong>  Context schema references can point at other
+          open standards; orchestration subagent references link to other AAIF
+          definitions by UUID or URI.
+        </li>
+        <li>
+          <strong>Verifiable.</strong>  The provenance.signature field allows Consumers
+          to cryptographically verify an agent's origin before execution.
+        </li>
+        <li>
+          <strong>Observable by default.</strong>  Telemetry and evaluation blocks are
+          first-class fields, not optional afterthoughts.  Observability is opt-out,
+          not opt-in.
+        </li>
+      </ol>
+    </section>
+
+    <!-- ============================================================ -->
+    <section anchor="document-structure" numbered="true" toc="default">
+      <name>AAIF Document Structure</name>
+      <t>
+        An AAIF agent definition is a JSON object validated against the AAIF agent
+        schema (JSON Schema draft 2020-12 <xref target="JSON-SCHEMA"/>).  The minimum
+        conformant document requires only three fields:
+      </t>
+      <artwork name="" type="" align="left" alt=""><![CDATA[
+{
+  "sc_standard": "SC-006",
+  "agent": {
+    "name": "Example Agent",
+    "goal": "Assist users with their enquiries."
+  }
+}
+]]></artwork>
+
+      <t>
+        The full object model is organised as a tree with a root that carries
+        document-level metadata, an agent block containing the operational declaration,
+        and a provenance block:
+      </t>
+
+      <artwork name="" type="" align="left" alt=""><![CDATA[
+AgentDefinition (root)
+  sc_standard     "SC-006"  (required)
+  sc_version      string (semver, default "3.4.0")
+  agent_id        string (UUID, stable across import/export)
+  status          draft | active | deprecated
+  tags[]          string[]
+  agent
+    name / version / description / goal / instructions / skills[]
+    required_capabilities[]   (capability negotiation, Section 7)
+    model
+      provider / preferred / provider_id / base_url
+      fallbacks[]             (ordered multi-provider fallback chain)
+      routing_strategy        cost | latency | quality | round_robin
+      min_context_tokens      (routing guard)
+      params / params.extended / response_format
+    orchestration
+      role      orchestrator | worker | evaluator | router | synthesizer
+      subagents[] / handoff[] / pipeline[]
+      parallel_execution / max_iterations / consensus
+    context[]               (RAG sources: text / file / url / dataset)
+    tools[]                 (Section 5.3)
+    memory[]                (Section 5.4)
+    constraints[]           (hard guardrails, enforced by runtime)
+    io                      (input/output schemas, streaming, mode)
+    events                  (triggers and lifecycle hooks)
+    runtime                 (timeout, retries, concurrency, queue)
+    telemetry               (OTEL tracing, metrics, OTLP endpoint)
+    evaluation              (LLM-as-judge, metrics, test cases)
+    compliance              (safety_level, data_residency, PII, audit)
+  provenance
+    authored_by / source_platform / created_at / updated_at
+    license / sc_refs[] / signature
+]]></artwork>
+
+      <section anchor="root-fields" numbered="true" toc="default">
+        <name>Root and Identity Fields</name>
+        <t>
+          The sc_standard field <bcp14>MUST</bcp14> be the string "SC-006".  This
+          serves as the document type discriminator.
+        </t>
+        <t>
+          The agent_id field is a UUID assigned once at agent creation.  It
+          <bcp14>MUST NOT</bcp14> change on import, export, or version bump.  Consumers
+          <bcp14>SHOULD</bcp14> use it as the canonical deduplication key.
+        </t>
+        <t>
+          The status field reflects the agent definition's lifecycle: "draft" (under
+          development), "active" (production-ready), or "deprecated" (retained for
+          back-compat only).  Consumers <bcp14>MAY</bcp14> refuse to execute
+          "deprecated" agents.
+        </t>
+      </section>
+
+      <section anchor="model-routing" numbered="true" toc="default">
+        <name>LLM Provider Routing</name>
+        <t>
+          The agent.model block expresses routing intent rather than a hard binding
+          to a specific model.  A conforming Consumer <bcp14>MUST</bcp14> implement
+          the following routing algorithm:
+        </t>
+        <ol spacing="normal" type="1">
+          <li>
+            Attempt the primary route: model.provider and model.preferred.
+          </li>
+          <li>
+            If the primary provider is unavailable or rate-limited, walk
+            model.fallbacks[] in declared order.  Each fallback entry carries its own
+            provider, model identifier, and an optional cost ceiling
+            (max_cost_usd_per_1k_tokens).
+          </li>
+          <li>
+            Apply model.routing_strategy when multiple models are equally available:
+            "cost" selects the cheapest model meeting min_context_tokens; "latency"
+            selects the fastest by observed p50; "quality" selects the highest
+            benchmark score by platform-defined ranking; "round_robin" distributes
+            load evenly; "preferred_first" always tries the declared order before
+            optimising.
+          </li>
+          <li>
+            Never route to a model whose context window is smaller than
+            model.min_context_tokens.
+          </li>
+        </ol>
+        <t>
+          The model.provider field enumerates 16 standard providers: openai,
+          anthropic, google, vertex_ai, mistral, cohere, groq, ollama, azure_openai,
+          bedrock, huggingface, together, fireworks, deepseek, xai, openrouter.
+          For providers not in the enumeration (gateway proxies, self-hosted
+          deployments, or new entrants), authors set model.provider to "custom" and
+          supply model.provider_id (a stable string identifier, e.g. "copilot" or
+          "litellm") and optionally model.base_url (an OpenAI-compatible API base URL).
+          This keeps the standard open-ended without enum churn for each new gateway.
+        </t>
+        <t>
+          The model.params.extended field is an open object that carries provider-specific
+          parameters not covered by standard fields (e.g. extended thinking budget for
+          Anthropic models).  The Consumer forwards these verbatim to the provider API
+          and <bcp14>MUST NOT</bcp14> validate their contents.
+        </t>
+      </section>
+
+      <section anchor="orchestration" numbered="true" toc="default">
+        <name>Orchestration Topology</name>
+        <t>
+          AAIF defines five agent roles and four topology patterns that cover the
+          majority of multi-agent LLM architectures observed in production.
+        </t>
+        <t>The five roles are:</t>
+        <ul spacing="normal">
+          <li>orchestrator — coordinates subagents and aggregates results.</li>
+          <li>worker — executes a specific task assigned by an orchestrator.</li>
+          <li>evaluator — scores or judges the output of other agents.</li>
+          <li>router — examines input and dispatches to appropriate specialists.</li>
+          <li>synthesizer — merges outputs from parallel workers into a single result.</li>
+        </ul>
+        <t>The four topology patterns are:</t>
+        <dl newline="false" spacing="normal">
+          <dt>Sequential pipeline</dt>
+          <dd>
+            Each agent's output is the next agent's input.  Declared via
+            orchestration.pipeline[] (an ordered list of subagent aliases).
+            Used when tasks have clear sequential dependency order.
+          </dd>
+          <dt>Parallel swarm (fan-out/fan-in)</dt>
+          <dd>
+            An orchestrator fans out to multiple workers simultaneously; a synthesizer
+            merges results.  Enabled by setting orchestration.parallel_execution to
+            true.  An optional consensus mechanism (majority_vote, best_of_n, referee,
+            first_success) governs how the synthesizer resolves disagreement.
+          </dd>
+          <dt>Dynamic routing</dt>
+          <dd>
+            A router agent examines the input and dispatches to the appropriate
+            specialist.  Each entry in orchestration.subagents[] carries a "when"
+            Condition (see <xref target="conditions"/>) that governs selection.
+          </dd>
+          <dt>Mid-run handoff</dt>
+          <dd>
+            Any agent can delegate mid-run to another agent using orchestration.handoff[].
+            The handoff entry declares a Condition, a target agent reference, and flags
+            controlling whether context and memory are passed to the receiving agent.
+          </dd>
+        </dl>
+        <t>
+          These patterns compose freely.  A pipeline step can itself be a swarm; a
+          swarm worker can trigger a handoff.  The orchestration.max_iterations field
+          provides a loop guard (default 10) that the Consumer
+          <bcp14>MUST</bcp14> enforce.
+        </t>
+      </section>
+
+      <section anchor="tools" numbered="true" toc="default">
+        <name>Tool Definitions</name>
+        <t>
+          Each entry in agent.tools[] declares a tool in one of four protocols:
+        </t>
+        <dl newline="false" spacing="normal">
+          <dt>function</dt>
+          <dd>
+            An in-process callable.  The parameters_schema is forwarded as-is to the
+            model's function-calling API (OpenAI, Anthropic, and Gemini formats are
+            all compatible).  No endpoint is required.
+          </dd>
+          <dt>mcp</dt>
+          <dd>
+            A Model Context Protocol <xref target="MCP"/> server.  The endpoint uses
+            the form mcp://server-name/capability or a full WebSocket/stdio URI.
+            The Consumer connects to the MCP server and exposes its tools to the LLM.
+          </dd>
+          <dt>http</dt>
+          <dd>
+            A raw REST endpoint.  The Consumer constructs a request using
+            parameters_schema as the request body schema.
+          </dd>
+          <dt>openapi</dt>
+          <dd>
+            An OpenAPI 3.x specification URL or local path.  The Consumer parses the
+            spec, exposes all or selected operations as tools, and handles
+            authentication via the spec's securitySchemes combined with the AAIF
+            auth block.
+          </dd>
+        </dl>
+        <t>
+          Every tool entry <bcp14>MAY</bcp14> carry a structured auth block.  The
+          auth.type field names the authentication mechanism (bearer, api_key, oauth2,
+          aws_sigv4, basic, mtls, or none).  Secrets <bcp14>MUST NOT</bcp14> appear
+          inline in the AAIF document.  The auth.env_var field names an environment
+          variable whose value the Consumer resolves at runtime.  The auth.vault_ref
+          field (introduced in v2.1) provides a structured reference to a secret in an
+          external vault — AWS Secrets Manager, HashiCorp Vault, Azure Key Vault, GCP
+          Secret Manager, or 1Password — identified by provider, path, key, and optional
+          version.  When both env_var and vault_ref are declared, vault_ref takes
+          precedence.
+        </t>
+        <t>
+          Additional per-tool fields control cache_ttl_seconds (cache successful
+          responses), timeout_seconds (per-call timeout), and rate_limit
+          (requests_per_minute and tokens_per_minute).
+        </t>
+      </section>
+
+      <section anchor="memory" numbered="true" toc="default">
+        <name>Memory Configuration</name>
+        <t>
+          AAIF distinguishes four memory scopes reflecting fundamentally different
+          retention and privacy requirements:
+        </t>
+        <ul spacing="normal">
+          <li>
+            user — persists across sessions for a single user.  <bcp14>MUST NOT</bcp14>
+            be shared across user boundaries.
+          </li>
+          <li>
+            session — scoped to a single conversation session.
+            <bcp14>MUST NOT</bcp14> outlive the session boundary.
+          </li>
+          <li>task — scoped to a single agentic task execution.</li>
+          <li>long_term — persistent storage across users and sessions.</li>
+        </ul>
+        <t>
+          Each memory entry declares a backend from the standard vocabulary:
+          in_memory, redis, postgres, sqlite, pinecone, weaviate, qdrant, chroma,
+          or custom.  Vector backends additionally declare an embedding_model, a
+          retrieval_strategy (similarity, keyword, hybrid, or recency), and top_k
+          (number of items to retrieve per query, default 5).  A ttl_seconds field
+          controls expiry; zero means never expire.
+        </t>
+      </section>
+
+      <section anchor="runtime" numbered="true" toc="default">
+        <name>Runtime Configuration</name>
+        <t>
+          The agent.runtime block declares production safety controls.  A Consumer
+          <bcp14>MUST</bcp14> abort execution after runtime.timeout_seconds and return
+          a structured error.  A Consumer <bcp14>MUST NOT</bcp14> exceed
+          runtime.concurrency simultaneous instances.  The retry policy is controlled
+          by max_retries and retry_backoff (fixed, linear, or exponential; default
+          exponential).
+        </t>
+        <t>
+          The runtime.async_execution flag enables a Consumer to return a job ID
+          immediately and execute in the background.  The runtime.queue field names
+          a work queue for async execution.
+        </t>
+      </section>
+
+      <section anchor="telemetry" numbered="true" toc="default">
+        <name>Telemetry</name>
+        <t>
+          The agent.telemetry block declares OpenTelemetry <xref target="OTEL"/>
+          configuration.  A Consumer with telemetry.tracing set to true
+          <bcp14>SHOULD</bcp14> emit the following spans per agent run:
+        </t>
+        <ul spacing="normal">
+          <li>aaif.agent.run (root) — with agent.id, agent.name, agent.version, model.provider, model.name attributes.</li>
+          <li>aaif.agent.tool_call (child) — with tool.name, tool.protocol, tool.endpoint.</li>
+          <li>aaif.agent.llm_call (child) — with llm.model, llm.provider, llm.input_tokens, llm.output_tokens.</li>
+          <li>aaif.agent.memory_read and aaif.agent.memory_write — with memory.scope, memory.backend.</li>
+          <li>aaif.agent.handoff — with target_agent.id, pass_context.</li>
+        </ul>
+        <t>
+          The telemetry.otlp_endpoint field specifies the OTLP collector endpoint.
+          If omitted, the Consumer falls back to its platform default.  W3C Trace
+          Context <xref target="W3C-TRACE"/> propagation uses the header named in
+          telemetry.trace_context_header (default "traceparent").
+        </t>
+      </section>
+
+      <section anchor="evaluation" numbered="true" toc="default">
+        <name>Evaluation</name>
+        <t>
+          The agent.evaluation block enables CI/CD quality gating.  The judge_model
+          field names the LLM used to evaluate agent outputs (recommended to be at
+          least as capable as the agent model).  The metrics[] array declares name and
+          threshold pairs; standard metric names are: faithfulness, relevance,
+          coherence, toxicity, hallucination_rate, task_completion, latency_ms,
+          cost_usd_per_run, and tool_call_accuracy.  The test_cases[] array provides
+          golden test inputs with expected outputs and rubric criteria.  A Consumer
+          running CI evaluation <bcp14>SHOULD</bcp14> gate promotion to
+          "status: active" on all threshold conditions being met.
+        </t>
+      </section>
+
+      <section anchor="compliance-block" numbered="true" toc="default">
+        <name>Compliance Controls</name>
+        <t>
+          The agent.compliance block encodes legal and operational requirements that
+          travel with the agent definition and cannot be silently dropped on import.
+        </t>
+        <dl newline="false" spacing="normal">
+          <dt>safety_level</dt>
+          <dd>
+            One of: minimal, standard, strict, regulated.  Governs Consumer behaviour
+            on unsatisfied capabilities (see <xref target="capability-negotiation"/>)
+            and constraint violations.
+          </dd>
+          <dt>data_residency</dt>
+          <dd>
+            One of: global, EU, US, UK, APAC, custom.  A Consumer
+            <bcp14>MUST</bcp14> route only to LLM providers with data centres in
+            the declared region.
+          </dd>
+          <dt>pii_handling</dt>
+          <dd>
+            One of: none, detect, anonymize, encrypt, reject.  Applied to memory items
+            and tool outputs by the Consumer.
+          </dd>
+          <dt>audit_log</dt>
+          <dd>
+            Boolean.  When true, the Consumer <bcp14>MUST</bcp14> maintain an
+            append-only, tamper-evident log of all invocations.
+          </dd>
+          <dt>human_in_the_loop</dt>
+          <dd>
+            Object with enabled, trigger (a Condition), and timeout_seconds.  When
+            enabled is true, the Consumer <bcp14>MUST</bcp14> obtain human approval
+            before executing any write tool call.  The trigger Condition allows scoping
+            the gate to specific actions.
+          </dd>
+        </dl>
+      </section>
+    </section>
+
+    <!-- ============================================================ -->
+    <section anchor="conditions" numbered="true" toc="default">
+      <name>Condition Expressions</name>
+      <t>
+        Several AAIF fields gate routing or execution: orchestration.subagents[].when,
+        orchestration.handoff[].condition, events.triggers[].filter, and
+        compliance.human_in_the_loop.trigger.  Each accepts a Condition value in one
+        of two forms.
+      </t>
+      <t>
+        The structured form (RECOMMENDED) is an object naming an expression language
+        and an expression string:
+      </t>
+      <artwork name="" type="" align="left" alt=""><![CDATA[
+{ "lang": "jsonpath", "expr": "$.task.type", "nl": "task type is code_review" }
+]]></artwork>
+      <t>Supported languages are:</t>
+      <ul spacing="normal">
+        <li>jsonpath — JSONPath query <xref target="RFC9535"/>; truthy if the result is non-empty.</li>
+        <li>jmespath — JMESPath query; truthy if the result is truthy.</li>
+        <li>cel — Common Expression Language boolean expression.</li>
+        <li>jsonlogic — JsonLogic rule object evaluated against the payload.</li>
+        <li>always — constant true (omit expr).</li>
+        <li>never — constant false (omit expr).</li>
+      </ul>
+      <t>
+        The optional nl field is a human-readable description for logs and UIs.  It
+        is advisory; the structured expr is authoritative.
+      </t>
+      <t>
+        The string form is also accepted for authoring convenience and backward
+        compatibility.  A bare string is a hint only — different runtimes interpret it
+        differently (or via an LLM) — and <bcp14>MUST NOT</bcp14> be relied upon for
+        portable, reproducible routing.  Consumers <bcp14>SHOULD</bcp14> emit a
+        portability warning when routing on a string condition.
+      </t>
+      <t>
+        A Consumer that supports a declared lang <bcp14>MUST</bcp14> evaluate the
+        structured form deterministically and <bcp14>MUST NOT</bcp14> fall back to
+        LLM interpretation of nl.  A Consumer that does not support a declared lang
+        <bcp14>MUST</bcp14> treat the condition as unsatisfied and apply the same
+        behaviour as an unsatisfied required_capability per the agent's safety_level.
+      </t>
+    </section>
+
+    <!-- ============================================================ -->
+    <section anchor="conformance" numbered="true" toc="default">
+      <name>Conformance Levels</name>
+      <t>
+        AAIF defines seven cumulative conformance levels.  Conformance is self-certified
+        against the public test suite (tests/conformance/ in the reference repository).
+        There is no central certifying authority; credibility comes from the claim being
+        machine-checkable against publicly available test fixtures.
+      </t>
+      <table align="center">
+        <thead>
+          <tr>
+            <th align="left">Level</th>
+            <th align="left">Requirements</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Core</td>
+            <td>Validates against agent schema; agent.name and agent.goal present.</td>
+          </tr>
+          <tr>
+            <td>Tooled</td>
+            <td>Core + at least one tool with parameters_schema.</td>
+          </tr>
+          <tr>
+            <td>Portable</td>
+            <td>Tooled + constraints[] non-empty + resolvable tools[].endpoint.</td>
+          </tr>
+          <tr>
+            <td>Multi-agent</td>
+            <td>Portable + orchestration.role declared + at least one subagent reference or handoff rule.</td>
+          </tr>
+          <tr>
+            <td>Observable</td>
+            <td>Portable + telemetry.tracing true + at least one evaluation metric with threshold.</td>
+          </tr>
+          <tr>
+            <td>Enterprise</td>
+            <td>Observable + compliance.safety_level declared + compliance.audit_log true + provenance.signature present.</td>
+          </tr>
+          <tr>
+            <td>Stateful</td>
+            <td>Enterprise + required_capabilities[] includes state.checkpoint + Agent State checkpoints supported.</td>
+          </tr>
+        </tbody>
+      </table>
+      <t>
+        Conformance is per level and per direction.  A Producer at level L exports AAIF
+        documents that validate against the schema and satisfy the level-L predicates.
+        A Consumer at level L imports and honours every construct required at that level,
+        including the normative <bcp14>MUST</bcp14> statements for that level.
+      </t>
+      <t>
+        The Stateful level is deliberately advanced.  It introduces Agent State
+        checkpoints, cross-platform migration, and streaming handoff (see
+        <xref target="agent-state"/>).  Consumers <bcp14>SHOULD</bcp14> achieve
+        Enterprise conformance before implementing Stateful.  Enterprise conformance
+        is independently meaningful and is not a prerequisite for Stateful.
+      </t>
+      <t>
+        Conformance reports validate against schema/conformance-report.schema.json and
+        are published at the well-known path /.well-known/aaif-conformance.json.
+      </t>
+    </section>
+
+    <!-- ============================================================ -->
+    <section anchor="capability-negotiation" numbered="true" toc="default">
+      <name>Capability Negotiation</name>
+      <t>
+        The agent.required_capabilities[] field declares what an agent requires from
+        its executing runtime.  A Consumer <bcp14>MUST</bcp14> check all declared
+        capabilities before accepting an agent definition.
+      </t>
+      <t>
+        Capabilities use a dot-namespaced string format: category.capability.
+        Standard categories and example identifiers:
+      </t>
+      <ul spacing="normal">
+        <li>tool — tool.function, tool.mcp, tool.http, tool.openapi</li>
+        <li>memory — memory.vector, memory.redis, memory.postgres, memory.pinecone, memory.qdrant</li>
+        <li>orchestration — orchestration.parallel, orchestration.handoff, orchestration.pipeline, orchestration.consensus</li>
+        <li>telemetry — telemetry.otel</li>
+        <li>compliance — compliance.data_residency, compliance.hitl, compliance.audit_log</li>
+        <li>auth — auth.vault</li>
+        <li>io — io.streaming, io.async, io.batch</li>
+        <li>state — state.checkpoint, state.restore</li>
+      </ul>
+      <t>
+        The Consumer behaviour on an unsatisfied capability depends on the agent's
+        compliance.safety_level:
+      </t>
+      <ul spacing="normal">
+        <li>minimal — log a warning and continue; the capability is silently skipped.</li>
+        <li>standard — import the agent with a warning; disable the dependent feature.</li>
+        <li>strict — <bcp14>MUST</bcp14> reject the import with a descriptive error listing unsatisfied capabilities.</li>
+        <li>regulated — <bcp14>MUST</bcp14> reject the import; the failure <bcp14>MUST</bcp14> be audit-logged.</li>
+      </ul>
+      <t>
+        Consumers <bcp14>SHOULD</bcp14> publish a machine-readable Platform Manifest
+        at the well-known URL path /.well-known/aaif-manifest.json.  The manifest
+        advertises the platform's supported capabilities, conformance level, AAIF
+        versions supported, and an intake endpoint (platform.intake_endpoint) for
+        posting agent definitions.  Orchestrators and CI/CD systems can fetch this
+        manifest to perform capability negotiation before dispatching an agent.
+      </t>
+    </section>
+
+    <!-- ============================================================ -->
+    <section anchor="agent-state" numbered="true" toc="default">
+      <name>Agent State and Checkpointing</name>
+      <t>
+        AAIF v3 introduces a companion schema, agent-state.schema.json, for capturing,
+        serialising, and restoring the complete execution state of a running agent.
+        This enables three primary use cases: pause and resume on the same platform,
+        cross-platform live migration, and crash recovery without full conversation
+        replay.
+      </t>
+
+      <section anchor="state-document" numbered="true" toc="default">
+        <name>Agent State Document</name>
+        <t>
+          An Agent State document carries the following fields:
+        </t>
+        <ul spacing="normal">
+          <li>state_id — a UUID uniquely identifying this checkpoint.</li>
+          <li>agent_id — links to the originating agent definition.</li>
+          <li>run_id — groups all checkpoints for one execution run.</li>
+          <li>checkpoint_at — UTC timestamp of capture (ISO 8601).</li>
+          <li>status — one of: running, paused, awaiting_approval, awaiting_tool_result, completed, failed, migrating.</li>
+          <li>iteration — current agentic loop count; the Consumer <bcp14>MUST</bcp14> enforce max_iterations on restore.</li>
+          <li>pipeline_position — current_step, completed_steps[], remaining_steps[], current_subagent, parallel_slot.</li>
+          <li>conversation[] — full message history; truncate from the oldest end on restore if the model context window is smaller.</li>
+          <li>memory_snapshot[] — all in-scope memory items; vector embeddings are NOT serialised and are re-computed on restore.</li>
+          <li>pending_tool_calls[] — in-flight or queued tool calls; the Consumer re-issues or marks them timed-out on restore.</li>
+          <li>subagent_states[] — per-subagent summaries; active subagents export their own Agent State documents for deep migration.</li>
+          <li>variables — named task-scope key-value pairs.</li>
+          <li>approval_request — present when status is "awaiting_approval"; carries trigger description and timeout.</li>
+          <li>error — present when status is "failed"; carries code, message, step, retries_remaining.</li>
+          <li>provenance — source_platform, migration_token, and a SHA-256 hex checksum of the canonical JSON (excluding the checksum field).</li>
+        </ul>
+      </section>
+
+      <section anchor="migration-protocol" numbered="true" toc="default">
+        <name>Cross-Platform Migration Protocol</name>
+        <t>A cross-platform migration follows seven steps:</t>
+        <ol spacing="normal" type="1">
+          <li>Source platform captures Agent State (status "paused" or "migrating").</li>
+          <li>Source platform issues a short-lived migration_token (signed, expiry at most 15 minutes).</li>
+          <li>Agent State document is transferred to the receiving platform out-of-band (API, file, message queue).</li>
+          <li>Receiving platform verifies the SHA-256 checksum, the migration_token signature, and that agent_id matches a known agent definition.</li>
+          <li>Receiving platform imports the state: loads memory, restores conversation, resumes at pipeline_position.current_step.</li>
+          <li>Receiving platform re-issues pending_tool_calls still in-flight or marks them timed-out.</li>
+          <li>Execution resumes.</li>
+        </ol>
+      </section>
+
+      <section anchor="streaming-handoff" numbered="true" toc="default">
+        <name>Streaming Handoff Wire Format</name>
+        <t>
+          For uninterrupted mid-generation migration, AAIF v3 defines a streaming
+          handoff wire format:
+        </t>
+        <artwork name="" type="" align="left" alt=""><![CDATA[
+Content-Type: application/x-aaif-handoff+ndjson
+]]></artwork>
+        <t>
+          Each line is a newline-delimited JSON object with a "type" discriminator.
+          Message types are: handoff_init, context_chunk, memory_item, pipeline_state,
+          pending_tool, subagent_ref, handoff_complete, and handoff_error.
+        </t>
+        <t>
+          The stream <bcp14>MUST</bcp14> be transmitted over TLS (HTTPS or WSS);
+          plaintext streaming handoffs are non-conformant.  The receiving Consumer
+          <bcp14>MUST</bcp14> verify the migration_token in the handoff_init message
+          before processing subsequent messages.  If a handoff_error message is received,
+          the Consumer <bcp14>MUST</bcp14> discard all accumulated state and
+          <bcp14>MUST NOT</bcp14> resume execution.  The SHA-256 checksum in
+          handoff_complete <bcp14>MUST</bcp14> be verified against the reconstructed
+          Agent State before execution resumes.
+        </t>
+      </section>
+    </section>
+
+    <!-- ============================================================ -->
+    <section anchor="binary-encoding" numbered="true" toc="default">
+      <name>Binary Encoding</name>
+      <t>
+        AAIF documents are canonically JSON <xref target="RFC8259"/>.  For
+        bandwidth-constrained transports (embedded runtimes, edge deployments,
+        high-throughput agent mesh), implementations <bcp14>MAY</bcp14> encode
+        AAIF documents as CBOR (Concise Binary Object Representation)
+        <xref target="RFC8949"/>.  The logical structure, field names, enum values,
+        and all constraints of the JSON schemas apply without modification to
+        CBOR-encoded documents.  The media type for CBOR-encoded AAIF documents is:
+      </t>
+      <artwork name="" type="" align="left" alt=""><![CDATA[
+application/cbor; profile="https://schemacommons.org/SC-006/cbor"
+]]></artwork>
+      <t>
+        Implementations <bcp14>MUST NOT</bcp14> use integer keys as a compression
+        scheme; field names remain UTF-8 text strings so JSON round-trips are lossless.
+        Any Consumer claiming AAIF conformance at Portable level or above that accepts
+        CBOR-encoded definitions <bcp14>MUST</bcp14> also accept the equivalent JSON
+        encoding and produce identical behaviour.
+      </t>
+    </section>
+
+    <!-- ============================================================ -->
+    <section anchor="extension-registries" numbered="true" toc="default">
+      <name>Extension Registries</name>
+      <t>
+        AAIF has several open extension points where new values arise regularly: LLM
+        providers, runtime capabilities, condition languages, vault providers, memory
+        backends, and tool protocols.  Rather than requiring a schema version change
+        for each new value, AAIF maintains community registries modelled on IANA's
+        expert-review and specification-required registration policies.
+      </t>
+      <t>
+        Each registry is a machine-readable JSON file validated against a registry
+        meta-schema.  The schema enum for each extension point is a convenience
+        subset of the registry; registered values with status "standard" are conformant
+        even if not yet reflected in the schema enum.  Values in neither the enum nor
+        the registry <bcp14>MUST</bcp14> use the documented escape hatch (model.provider
+        "custom" with provider_id, or x- extension keys at the document root) rather
+        than inventing unregistered bare enum values.
+      </t>
+      <t>
+        The six registries, their extension points, and registration policies are:
+      </t>
+      <table align="center">
+        <thead>
+          <tr>
+            <th align="left">Registry</th>
+            <th align="left">Extension point</th>
+            <th align="left">Policy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>providers.json</td><td>model.provider</td><td>Specification Required</td></tr>
+          <tr><td>capabilities.json</td><td>required_capabilities[]</td><td>Expert Review</td></tr>
+          <tr><td>condition-languages.json</td><td>Condition lang</td><td>Specification Required</td></tr>
+          <tr><td>vault-providers.json</td><td>auth.vault_ref.provider</td><td>Specification Required</td></tr>
+          <tr><td>memory-backends.json</td><td>memory[].backend</td><td>Specification Required</td></tr>
+          <tr><td>tool-protocols.json</td><td>tools[].protocol</td><td>Standards Action</td></tr>
+        </tbody>
+      </table>
+      <t>
+        Registration policies follow IANA conventions:
+        First Come First Served (unique identifier and one-line description),
+        Specification Required (stable public specification or documentation URL),
+        Expert Review (Editor sign-off confirming orthogonality and scope), and
+        Standards Action (normative schema change in a new MINOR version).
+      </t>
+    </section>
+
+    <!-- ============================================================ -->
+    <section anchor="relationship-prior-art" numbered="true" toc="default">
+      <name>Relationship to Prior Art</name>
+      <t>
+        Before drafting this section, the editors searched specifically for an
+        existing standard defining a portable, vendor-neutral agent <em>definition</em>
+        document — the thing AAIF itself is.  No such standard was found.  The
+        frameworks and protocols discussed below each address an adjacent problem,
+        but none of them defines the complete, importable agent record that AAIF
+        defines.  That absence is stated plainly here, rather than overstated or
+        replaced with invented modesty about non-existent competitors.
+      </t>
+      <dl newline="false" spacing="normal">
+        <dt>Model Context Protocol (MCP)</dt>
+        <dd>
+          MCP <xref target="MCP"/> standardises how an agent invokes external tools
+          — the wire protocol for tool calls.  It does not specify what an agent is,
+          how it routes to an LLM, how it manages memory, or how it orchestrates
+          subagents.  AAIF explicitly incorporates MCP as one of its four supported
+          tool protocols.  The two specifications are complementary: MCP is the tool
+          cable; AAIF is the agent blueprint.  Separately, the MCP project's own
+          published roadmap <xref target="MCP-ROADMAP"/> (dated 2026-03-05) lists
+          "audit trails and observability" as an acknowledged, currently unsolved
+          Enterprise Readiness gap.  That is honest evidence that the agent ecosystem
+          has more than one unsolved fragmentation problem; it is evidence of
+          fragmentation generally, not specifically of the portable-agent-definition
+          gap that AAIF addresses, and is cited here only for the former.
+        </dd>
+        <dt>A2A Agent Card</dt>
+        <dd>
+          The A2A Agent Card is a minimal discovery document advertising an agent's
+          identity, capability tags, and endpoint URL.  It is deliberately thin by
+          design.  An AAIF definition carries a superset of Agent Card information and
+          can generate a conformant Agent Card.  A2A addresses agent-to-agent runtime
+          messaging; AAIF addresses portable agent definition.
+        </dd>
+        <dt>OpenAI Assistants API</dt>
+        <dd>
+          The Assistants API is expressive within the OpenAI platform but is bound to
+          a specific vendor's runtime and API surface.  AAIF can express the same
+          concepts portably across providers.  A bidirectional reference converter
+          between OpenAI Assistants format and AAIF is provided in the tooling
+          repository.
+        </dd>
+        <dt>Agent Persistent State Profile (APS)</dt>
+        <dd>
+          draft-gaikwad-aps-profile-00 <xref target="APS"/> is an active IETF
+          individual draft specifying a storage <em>service class</em> — an
+          "AgentPersistentState" usage class with a versioned
+          "PersistentStateLineOfService" schema, bound non-normatively to the SNIA
+          Swordfish/Redfish storage-management standards, covering crash consistency,
+          cryptographic erasure tied to identity, vector-index workloads, and
+          Kubernetes/CSI integration.  APS operates at the storage-infrastructure
+          layer: it describes how a storage backend advertises itself as suitable for
+          hosting agent state.  AAIF's Agent State schema (<xref target="agent-state"/>)
+          operates at the document layer: it describes the portable application-level
+          record — conversation history, memory snapshot, pipeline position, pending
+          tool calls, subagent states — captured from a running agent for pause,
+          resume, or migration between runtimes.  The two are complementary, not
+          competing: an AAIF Agent State document is the kind of payload that could be
+          persisted on an APS-class volume.  AAIF takes no position on, and has no
+          dependency on, the storage layer beneath a checkpoint.
+        </dd>
+        <dt>OpenTelemetry GenAI Semantic Conventions and OpenInference</dt>
+        <dd>
+          AAIF's telemetry block (<xref target="telemetry"/>) intentionally does not
+          define its own span or event semantics.  Two real, overlapping conventions
+          already exist: the OpenTelemetry GenAI semantic conventions
+          <xref target="OTEL-GENAI"/> (<tt>gen_ai.*</tt> span attributes and an
+          <tt>invoke_agent</tt> to <tt>chat</tt>/<tt>execute_tool</tt> span tree;
+          experimental as of March 2026 but already emitted or instrumented by
+          LangChain, CrewAI, AutoGen, and AG2, and consumed natively by Datadog,
+          Honeycomb, and New Relic), and OpenInference <xref target="OPENINFERENCE"/>
+          (Arize AI's OTel-based convention with ten span kinds: LLM, EMBEDDING,
+          RETRIEVER, RERANKER, TOOL, CHAIN, AGENT, GUARDRAIL, EVALUATOR, PROMPT).  AAIF
+          defers span-attribute semantics to whichever of these the executing runtime
+          already speaks, rather than standardising a third, competing vocabulary.
+          Agent observability and audit-event vocabularies more broadly are out of
+          scope for this document; see the external prior-art note referenced from the
+          Schema Commons repository for that adjacent discussion.
+        </dd>
+      </dl>
+    </section>
+
+    <!-- ============================================================ -->
+    <section anchor="security" numbered="true" toc="default">
+      <name>Security Considerations</name>
+      <t>
+        Consumers <bcp14>MUST</bcp14> treat imported tools[].endpoint values as
+        untrusted input and apply capability gating before activating any tool.
+        An AAIF document from an unknown source could declare a tool endpoint pointing
+        to an attacker-controlled server.
+      </t>
+      <t>
+        Secrets <bcp14>MUST NOT</bcp14> appear inline in AAIF documents.  The
+        auth.env_var and auth.vault_ref fields name where the Consumer resolves the
+        secret; they carry a reference, not the credential itself.  Tools that carry
+        inline credential values in any field violate this specification and
+        <bcp14>MUST</bcp14> be rejected.
+      </t>
+      <t>
+        The constraints[] array <bcp14>MUST</bcp14> be enforced by the Consumer.
+        A Consumer that silently drops a constraint is in violation of this
+        specification and may permit harmful agent behaviour.
+      </t>
+      <t>
+        Consumers <bcp14>MUST</bcp14> be alert to prompt injection in
+        context[type=url] values fetched at runtime.  Content retrieved from
+        declared URLs <bcp14>SHOULD</bcp14> be sanitised or sandboxed before
+        injection into the agent's context window.
+      </t>
+      <t>
+        The compliance.data_residency field <bcp14>MUST</bcp14> be respected.
+        Routing an agent to a provider whose data centres are outside the declared
+        region violates the compliance contract and may have legal consequences.
+      </t>
+      <t>
+        Agent State documents contain conversation history and memory contents, which
+        may include personally identifiable information (PII).  The same pii_handling
+        policy declared in the agent definition <bcp14>MUST</bcp14> be applied to
+        Agent State documents at rest and in transit.  Agent State documents
+        <bcp14>MUST</bcp14> be transmitted over an encrypted channel.
+      </t>
+      <t>
+        The migration_token in Agent State documents and streaming handoffs
+        <bcp14>MUST</bcp14> be a signed, short-lived token with an expiry of at most
+        15 minutes.  The receiving Consumer <bcp14>MUST</bcp14> verify the token
+        signature before accepting the state.  The SHA-256 checksum
+        <bcp14>MUST</bcp14> be verified before restoring state; a mismatch indicates
+        tampering or corruption and the import <bcp14>MUST</bcp14> be rejected.
+      </t>
+      <t>
+        The provenance.signature field carries a Base64-encoded Ed25519 signature
+        over the canonical JSON of the agent definition.  Consumers receiving agents
+        from untrusted or third-party sources <bcp14>SHOULD</bcp14> verify this
+        signature before execution.
+      </t>
+      <t>
+        The stack_trace field in Agent State error blocks <bcp14>SHOULD</bcp14> be
+        stripped before exporting a checkpoint to an external platform to avoid
+        disclosing implementation details.
+      </t>
+    </section>
+
+    <!-- ============================================================ -->
+    <section anchor="iana" numbered="true" toc="default">
+      <name>IANA Considerations</name>
+
+      <section anchor="iana-media-type" numbered="true" toc="default">
+        <name>Media Type Registration</name>
+        <t>
+          This document requests registration of the following media type with IANA.
+        </t>
+        <dl newline="false" spacing="normal">
+          <dt>Type name</dt><dd>application</dd>
+          <dt>Subtype name</dt><dd>x-aaif-handoff+ndjson</dd>
+          <dt>Required parameters</dt><dd>None.</dd>
+          <dt>Optional parameters</dt><dd>None.</dd>
+          <dt>Encoding considerations</dt>
+          <dd>UTF-8 newline-delimited JSON (NDJSON); each line is a JSON object.</dd>
+          <dt>Security considerations</dt>
+          <dd>See <xref target="security"/> of this document.  The stream MUST be transmitted over TLS.</dd>
+          <dt>Interoperability considerations</dt>
+          <dd>Recipients MUST verify the migration_token and SHA-256 checksum before processing.</dd>
+          <dt>Published specification</dt><dd>This document.</dd>
+          <dt>Applications that use this media type</dt>
+          <dd>
+            AAIF-conforming runtimes performing live agent state handoff during
+            cross-platform migration of running AI agents.
+          </dd>
+          <dt>Fragment identifier considerations</dt><dd>None.</dd>
+          <dt>Restrictions on usage</dt><dd>None.</dd>
+          <dt>Author</dt><dd>Bob van Bussel, bob@observalytics.com</dd>
+          <dt>Change controller</dt><dd>Schema Commons (https://github.com/Observalytics-SL/Frameworks)</dd>
+        </dl>
+      </section>
+
+      <section anchor="iana-registries" numbered="true" toc="default">
+        <name>Future Registry Considerations</name>
+        <t>
+          AAIF currently maintains six community extension registries (providers,
+          capabilities, condition languages, vault providers, memory backends, and
+          tool protocols) as described in <xref target="extension-registries"/>.
+          These registries are currently operated by the Schema Commons project.
+          A future revision of this document or an accompanying document may request
+          that IANA operate one or more of these registries under the appropriate
+          IANA registration policies (Specification Required or Expert Review as
+          indicated per registry).
+        </t>
+      </section>
+    </section>
+
+  </middle>
+
+  <back>
+    <references>
+      <name>References</name>
+
+      <references>
+        <name>Normative References</name>
+
+        <reference anchor="RFC2119"
+                   target="https://www.rfc-editor.org/rfc/rfc2119">
+          <front>
+            <title>Key words for use in RFCs to Indicate Requirement Levels</title>
+            <author initials="S." surname="Bradner" fullname="S. Bradner">
+              <organization/>
+            </author>
+            <date year="1997" month="March"/>
+          </front>
+          <seriesInfo name="BCP" value="14"/>
+          <seriesInfo name="RFC" value="2119"/>
+          <seriesInfo name="DOI" value="10.17487/RFC2119"/>
+        </reference>
+
+        <reference anchor="RFC8174"
+                   target="https://www.rfc-editor.org/rfc/rfc8174">
+          <front>
+            <title>Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words</title>
+            <author initials="B." surname="Leiba" fullname="B. Leiba">
+              <organization/>
+            </author>
+            <date year="2017" month="May"/>
+          </front>
+          <seriesInfo name="BCP" value="14"/>
+          <seriesInfo name="RFC" value="8174"/>
+          <seriesInfo name="DOI" value="10.17487/RFC8174"/>
+        </reference>
+
+        <reference anchor="RFC8259"
+                   target="https://www.rfc-editor.org/rfc/rfc8259">
+          <front>
+            <title>The JavaScript Object Notation (JSON) Data Interchange Format</title>
+            <author initials="T." surname="Bray" fullname="T. Bray" role="editor">
+              <organization/>
+            </author>
+            <date year="2017" month="December"/>
+          </front>
+          <seriesInfo name="STD" value="90"/>
+          <seriesInfo name="RFC" value="8259"/>
+          <seriesInfo name="DOI" value="10.17487/RFC8259"/>
+        </reference>
+
+        <reference anchor="RFC8949"
+                   target="https://www.rfc-editor.org/rfc/rfc8949">
+          <front>
+            <title>Concise Binary Object Representation (CBOR)</title>
+            <author initials="C." surname="Bormann" fullname="C. Bormann">
+              <organization/>
+            </author>
+            <author initials="P." surname="Hoffman" fullname="P. Hoffman">
+              <organization/>
+            </author>
+            <date year="2020" month="December"/>
+          </front>
+          <seriesInfo name="STD" value="94"/>
+          <seriesInfo name="RFC" value="8949"/>
+          <seriesInfo name="DOI" value="10.17487/RFC8949"/>
+        </reference>
+
+        <reference anchor="RFC9535"
+                   target="https://www.rfc-editor.org/rfc/rfc9535">
+          <front>
+            <title>JSONPath: Query Expressions for JSON</title>
+            <author initials="S." surname="Gössner" fullname="S. Gössner">
+              <organization/>
+            </author>
+            <author initials="G." surname="Normington" fullname="G. Normington">
+              <organization/>
+            </author>
+            <author initials="C." surname="Bormann" fullname="C. Bormann">
+              <organization/>
+            </author>
+            <date year="2024" month="February"/>
+          </front>
+          <seriesInfo name="RFC" value="9535"/>
+          <seriesInfo name="DOI" value="10.17487/RFC9535"/>
+        </reference>
+
+        <reference anchor="JSON-SCHEMA"
+                   target="https://json-schema.org/draft/2020-12">
+          <front>
+            <title>JSON Schema: A Media Type for Describing JSON Documents</title>
+            <author initials="A." surname="Wright" fullname="A. Wright">
+              <organization/>
+            </author>
+            <author initials="H." surname="Andrews" fullname="H. Andrews">
+              <organization/>
+            </author>
+            <date year="2022"/>
+          </front>
+        </reference>
+
+      </references>
+
+      <references>
+        <name>Informative References</name>
+
+        <reference anchor="RFC5545"
+                   target="https://www.rfc-editor.org/rfc/rfc5545">
+          <front>
+            <title>Internet Calendaring and Scheduling Core Object Specification (iCalendar)</title>
+            <author initials="B." surname="Desruisseaux" fullname="B. Desruisseaux" role="editor">
+              <organization/>
+            </author>
+            <date year="2009" month="September"/>
+          </front>
+          <seriesInfo name="RFC" value="5545"/>
+          <seriesInfo name="DOI" value="10.17487/RFC5545"/>
+        </reference>
+
+        <reference anchor="MCP"
+                   target="https://modelcontextprotocol.io">
+          <front>
+            <title>Model Context Protocol</title>
+            <author>
+              <organization>Anthropic</organization>
+            </author>
+            <date year="2024"/>
+          </front>
+        </reference>
+
+        <reference anchor="OTEL"
+                   target="https://opentelemetry.io/docs/specs/">
+          <front>
+            <title>OpenTelemetry Specification</title>
+            <author>
+              <organization>OpenTelemetry</organization>
+            </author>
+            <date year="2024"/>
+          </front>
+        </reference>
+
+        <reference anchor="W3C-TRACE"
+                   target="https://www.w3.org/TR/trace-context/">
+          <front>
+            <title>Trace Context</title>
+            <author>
+              <organization>W3C</organization>
+            </author>
+            <date year="2021"/>
+          </front>
+        </reference>
+
+        <reference anchor="APS"
+                   target="https://datatracker.ietf.org/doc/draft-gaikwad-aps-profile/">
+          <front>
+            <title>Agent Persistent State Profile (APS)</title>
+            <author fullname="Gaikwad, et al.">
+              <organization/>
+            </author>
+            <date year="2026"/>
+          </front>
+          <refcontent>Work in Progress</refcontent>
+          <seriesInfo name="Internet-Draft" value="draft-gaikwad-aps-profile-00"/>
+        </reference>
+
+        <reference anchor="OTEL-GENAI"
+                   target="https://opentelemetry.io/docs/specs/semconv/gen-ai/">
+          <front>
+            <title>Semantic Conventions for Generative AI Systems</title>
+            <author>
+              <organization>OpenTelemetry</organization>
+            </author>
+            <date year="2026"/>
+          </front>
+          <refcontent>Experimental</refcontent>
+        </reference>
+
+        <reference anchor="OPENINFERENCE"
+                   target="https://github.com/Arize-ai/openinference">
+          <front>
+            <title>OpenInference Semantic Conventions</title>
+            <author>
+              <organization>Arize AI</organization>
+            </author>
+            <date year="2026"/>
+          </front>
+        </reference>
+
+        <reference anchor="MCP-ROADMAP"
+                   target="https://modelcontextprotocol.io/development/roadmap">
+          <front>
+            <title>Model Context Protocol Roadmap</title>
+            <author>
+              <organization>Model Context Protocol</organization>
+            </author>
+            <date year="2026" month="March" day="5"/>
+          </front>
+        </reference>
+
+      </references>
+    </references>
+
+  </back>
+</rfc>

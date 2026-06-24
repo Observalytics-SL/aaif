@@ -1,0 +1,199 @@
+{
+  "x-sc-schema": "agent.schema.json",
+  "sc_standard": "SC-006",
+  "sc_version": "2.1.0",
+  "agent_id": "b2c3d4e5-0002-4000-8000-research00001",
+  "status": "active",
+  "tags": ["research", "summarization", "web-search", "citations", "rag"],
+  "agent": {
+    "name": "Research Summarizer",
+    "version": "2.0.0",
+    "description": "Fetches a set of web articles and synthesises them into a concise, cited research brief. Suitable as a worker in research pipeline orchestrations.",
+    "goal": "Summarize a set of web articles into a concise, cited brief of no more than 500 words.",
+    "instructions": "You are a meticulous research assistant. For each article: fetch the content, extract the key claims, and attribute every claim to its source URL. At the end, produce a structured brief with an executive summary, key findings (bulleted), and a full reference list. Flag any claims you are uncertain about with '(unverified)'. Never fabricate citations. If a URL fails to load, note it as unavailable and continue.",
+    "skills": ["web-research", "summarization", "citation", "rag", "synthesis"],
+    "model": {
+      "provider": "openai",
+      "preferred": "gpt-4o",
+      "fallbacks": [
+        { "provider": "anthropic", "model": "claude-sonnet-4-5" },
+        { "provider": "google",    "model": "gemini-2.5-flash" },
+        { "provider": "mistral",   "model": "mistral-large-latest" }
+      ],
+      "routing_strategy": "quality",
+      "min_context_tokens": 64000,
+      "temperature": 0.2,
+      "params": { "max_tokens": 2048, "seed": 42 },
+      "response_format": "json_schema"
+    },
+    "orchestration": {
+      "role": "worker"
+    },
+    "context": [
+      {
+        "type": "text",
+        "label": "Output format guide",
+        "value": "Brief must have: ## Executive Summary (1 paragraph), ## Key Findings (3–7 bullets with inline citations), ## References (numbered list). Word count ≤ 500."
+      },
+      {
+        "type": "text",
+        "label": "Uncertainty protocol",
+        "value": "If a claim cannot be verified from the provided sources, append '(unverified)' and explain why in a footnote."
+      }
+    ],
+    "tools": [
+      {
+        "name": "fetch_url",
+        "description": "Fetch and extract the main readable text of a web page, stripping navigation, ads, and boilerplate.",
+        "protocol": "http",
+        "endpoint": "https://api.example.com/v1/fetch",
+        "parameters_schema": {
+          "type": "object",
+          "required": ["url"],
+          "properties": {
+            "url":          { "type": "string", "format": "uri" },
+            "max_chars":    { "type": "integer", "default": 8000 },
+            "include_meta": { "type": "boolean", "default": true }
+          }
+        },
+        "output_schema": {
+          "type": "object",
+          "properties": {
+            "title":       { "type": "string" },
+            "text":        { "type": "string" },
+            "published_at":{ "type": "string", "format": "date" },
+            "author":      { "type": "string" }
+          }
+        },
+        "auth": { "type": "api_key", "env_var": "FETCH_API_KEY", "header": "X-API-Key" },
+        "cache_ttl_seconds": 3600,
+        "timeout_seconds": 20,
+        "rate_limit": { "requests_per_minute": 30 }
+      },
+      {
+        "name": "semantic_search",
+        "description": "Search the agent's vector memory for previously summarized articles on a similar topic.",
+        "protocol": "function",
+        "parameters_schema": {
+          "type": "object",
+          "required": ["query"],
+          "properties": {
+            "query":   { "type": "string" },
+            "top_k":   { "type": "integer", "default": 5 }
+          }
+        }
+      }
+    ],
+    "memory": [
+      {
+        "scope": "long_term",
+        "key": "article_summaries",
+        "content": "Vector store of previously summarized articles (title, URL, summary, embeddings).",
+        "backend": "qdrant",
+        "ttl_seconds": 0,
+        "embedding_model": "text-embedding-3-small",
+        "retrieval_strategy": "hybrid",
+        "top_k": 5
+      },
+      {
+        "scope": "session",
+        "key": "current_brief_draft",
+        "content": "Working draft of the current research brief.",
+        "backend": "in_memory",
+        "ttl_seconds": 3600
+      }
+    ],
+    "constraints": [
+      "Do not fabricate citations — every claim must trace back to a fetched URL.",
+      "Keep the output brief to 500 words maximum.",
+      "Do not include personal opinions — report findings neutrally.",
+      "If fewer than 2 URLs load successfully, return an error rather than a partial brief."
+    ],
+    "io": {
+      "input_schema": {
+        "type": "object",
+        "required": ["urls"],
+        "properties": {
+          "urls":  { "type": "array", "items": { "type": "string", "format": "uri" }, "minItems": 1, "maxItems": 20 },
+          "topic": { "type": "string", "description": "Optional topic hint to focus the summary." }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "required": ["executive_summary", "key_findings", "references"],
+        "properties": {
+          "executive_summary": { "type": "string" },
+          "key_findings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "finding":    { "type": "string" },
+                "source_url": { "type": "string" }
+              }
+            }
+          },
+          "references": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "number": { "type": "integer" },
+                "url":    { "type": "string" },
+                "title":  { "type": "string" }
+              }
+            }
+          },
+          "word_count":         { "type": "integer" },
+          "urls_failed":        { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "streaming": false,
+      "format": "json",
+      "mode": "sync"
+    },
+    "runtime": {
+      "timeout_seconds": 120,
+      "max_retries": 1,
+      "retry_backoff": "linear",
+      "concurrency": 5,
+      "environment": "production"
+    },
+    "telemetry": {
+      "tracing":   true,
+      "log_level": "info",
+      "metrics":   true
+    },
+    "evaluation": {
+      "judge_model": "gpt-4o",
+      "metrics": [
+        { "name": "faithfulness",      "threshold": 0.92 },
+        { "name": "relevance",         "threshold": 0.85 },
+        { "name": "hallucination_rate","threshold": 0.05 },
+        { "name": "task_completion",   "threshold": 0.90 }
+      ],
+      "test_cases": [
+        {
+          "id": "tc-001",
+          "input": {
+            "urls": ["https://example.com/article1", "https://example.com/article2"],
+            "topic": "LLM agent architectures"
+          },
+          "criteria": "Brief must be ≤500 words, cite at least 2 sources, have no fabricated facts, and follow the required section structure."
+        }
+      ]
+    },
+    "compliance": {
+      "safety_level": "standard",
+      "pii_handling": "detect",
+      "audit_log":    false
+    }
+  },
+  "provenance": {
+    "authored_by":     "research-team",
+    "source_platform": "LangGraph",
+    "created_at":      "2026-05-20T12:00:00Z",
+    "updated_at":      "2026-06-10T10:00:00Z",
+    "license":         "CC-BY-4.0"
+  }
+}

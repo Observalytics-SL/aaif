@@ -1,0 +1,286 @@
+{
+  "x-sc-schema": "agent.schema.json",
+  "sc_standard": "SC-006",
+  "sc_version": "2.1.0",
+  "agent_id": "f6a7b8c9-0006-4000-8000-codeswarm01",
+  "status": "active",
+  "tags": ["code-review", "swarm", "parallel", "security", "quality"],
+  "agent": {
+    "name": "Code Review Swarm",
+    "version": "1.0.0",
+    "description": "Orchestrator that fans out to three specialist reviewer agents in parallel (security, style, logic), then a synthesizer merges their findings into a unified pull-request review comment. Uses majority vote to resolve conflicting severity assessments.",
+    "goal": "Produce a comprehensive, multi-perspective code review by running security, style, and logic reviewers in parallel and synthesizing their outputs into a single actionable review.",
+    "instructions": "You are a code review orchestration agent. Fan out the provided diff to all three reviewer workers simultaneously. Collect their outputs. If they disagree on a finding's severity, apply majority vote. Pass the merged findings to the synthesizer to produce the final GitHub review comment. The final comment must group findings by severity: BLOCKER → WARNING → SUGGESTION.",
+    "skills": ["orchestration", "code-review", "parallel-execution", "synthesis"],
+    "model": {
+      "provider": "openai",
+      "preferred": "gpt-4o",
+      "fallbacks": [
+        { "provider": "anthropic", "model": "claude-sonnet-4-5" },
+        { "provider": "groq",      "model": "llama-3.3-70b-versatile" }
+      ],
+      "routing_strategy": "latency",
+      "min_context_tokens": 32000,
+      "temperature": 0.0,
+      "response_format": "json"
+    },
+    "orchestration": {
+      "role": "orchestrator",
+      "subagents": [
+        {
+          "ref": "aa000001-cafe-4000-8000-secreviewer1",
+          "alias": "security_reviewer",
+          "role": "specialist",
+          "when": { "lang": "always", "nl": "run in parallel with style and logic reviewers" }
+        },
+        {
+          "ref": "bb000002-cafe-4000-8000-stylerevwr1",
+          "alias": "style_reviewer",
+          "role": "specialist",
+          "when": { "lang": "always", "nl": "run in parallel with security and logic reviewers" }
+        },
+        {
+          "ref": "cc000003-cafe-4000-8000-logicrevwr1",
+          "alias": "logic_reviewer",
+          "role": "specialist",
+          "when": { "lang": "always", "nl": "run in parallel with security and style reviewers" }
+        },
+        {
+          "ref": "dd000004-cafe-4000-8000-synthesize1",
+          "alias": "synthesizer",
+          "role": "worker",
+          "when": "after all three reviewers complete",
+          "pass_memory_keys": ["security_findings", "style_findings", "logic_findings"]
+        }
+      ],
+      "parallel_execution": true,
+      "max_iterations": 3,
+      "consensus": {
+        "strategy": "majority_vote",
+        "min_votes": 2
+      }
+    },
+    "context": [
+      {
+        "type": "text",
+        "label": "Severity definitions",
+        "value": "BLOCKER: must fix before merge (security vuln, data loss risk, crash). WARNING: should fix (bad practice, perf issue, missing test). SUGGESTION: nice to have (style, minor improvement)."
+      },
+      {
+        "type": "text",
+        "label": "Output format",
+        "value": "Final review must start with a one-line summary, then three sections: ## BLOCKERS, ## WARNINGS, ## SUGGESTIONS. Each finding: '- [FILE:LINE] Description. Suggested fix: ...'."
+      },
+      {
+        "type": "url",
+        "label": "Company coding standards",
+        "value": "https://wiki.example.com/engineering/coding-standards",
+        "refresh_ttl_seconds": 86400
+      }
+    ],
+    "tools": [
+      {
+        "name": "invoke_subagent",
+        "description": "Invoke a registered subagent by alias with the provided input.",
+        "protocol": "function",
+        "parameters_schema": {
+          "type": "object",
+          "required": ["alias", "input"],
+          "properties": {
+            "alias": { "type": "string" },
+            "input": {
+              "type": "object",
+              "properties": {
+                "diff":        { "type": "string", "description": "Unified diff of the pull request." },
+                "language":    { "type": "string" },
+                "pr_context":  { "type": "string", "description": "PR title and description for context." }
+              }
+            }
+          }
+        },
+        "output_schema": {
+          "type": "object",
+          "properties": {
+            "findings": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "severity":    { "type": "string", "enum": ["BLOCKER", "WARNING", "SUGGESTION"] },
+                  "file":        { "type": "string" },
+                  "line":        { "type": "integer" },
+                  "description": { "type": "string" },
+                  "fix":         { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "timeout_seconds": 60
+      },
+      {
+        "name": "post_github_review",
+        "description": "Post the synthesized review comment to the GitHub pull request.",
+        "protocol": "http",
+        "endpoint": "https://api.github.com/repos/{owner}/{repo}/pulls/{pull_number}/reviews",
+        "parameters_schema": {
+          "type": "object",
+          "required": ["owner", "repo", "pull_number", "body", "event"],
+          "properties": {
+            "owner":       { "type": "string" },
+            "repo":        { "type": "string" },
+            "pull_number": { "type": "integer" },
+            "body":        { "type": "string" },
+            "event":       { "type": "string", "enum": ["APPROVE", "REQUEST_CHANGES", "COMMENT"] }
+          }
+        },
+        "auth": { "type": "bearer", "env_var": "GITHUB_TOKEN" },
+        "timeout_seconds": 15,
+        "rate_limit": { "requests_per_minute": 30 }
+      }
+    ],
+    "memory": [
+      {
+        "scope": "task",
+        "key": "security_findings",
+        "content": "Raw findings from security_reviewer for this review run.",
+        "backend": "in_memory",
+        "ttl_seconds": 1800
+      },
+      {
+        "scope": "task",
+        "key": "style_findings",
+        "content": "Raw findings from style_reviewer for this review run.",
+        "backend": "in_memory",
+        "ttl_seconds": 1800
+      },
+      {
+        "scope": "task",
+        "key": "logic_findings",
+        "content": "Raw findings from logic_reviewer for this review run.",
+        "backend": "in_memory",
+        "ttl_seconds": 1800
+      },
+      {
+        "scope": "long_term",
+        "key": "false_positive_patterns",
+        "content": "Patterns previously dismissed as false positives to avoid re-raising them.",
+        "backend": "qdrant",
+        "ttl_seconds": 0,
+        "embedding_model": "text-embedding-3-small",
+        "retrieval_strategy": "similarity",
+        "top_k": 10
+      }
+    ],
+    "constraints": [
+      "Never approve a PR that has at least one BLOCKER finding.",
+      "Do not raise the same finding more than once in the same review.",
+      "Always include a line number reference for every finding.",
+      "Do not comment on auto-generated files (*.generated.*, node_modules/, dist/).",
+      "Keep the total review under 2000 words."
+    ],
+    "io": {
+      "input_schema": {
+        "type": "object",
+        "required": ["diff", "owner", "repo", "pull_number"],
+        "properties": {
+          "diff":        { "type": "string", "description": "Unified diff text of the pull request." },
+          "language":    { "type": "string", "description": "Primary programming language (e.g. 'python', 'typescript')." },
+          "pr_context":  { "type": "string", "description": "PR title + description for intent context." },
+          "owner":       { "type": "string" },
+          "repo":        { "type": "string" },
+          "pull_number": { "type": "integer" },
+          "post_review": { "type": "boolean", "default": true, "description": "If false, return review without posting to GitHub." }
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "required": ["review_body", "verdict"],
+        "properties": {
+          "review_body":       { "type": "string" },
+          "verdict":           { "type": "string", "enum": ["APPROVE", "REQUEST_CHANGES", "COMMENT"] },
+          "blocker_count":     { "type": "integer" },
+          "warning_count":     { "type": "integer" },
+          "suggestion_count":  { "type": "integer" },
+          "reviewer_latency_ms": {
+            "type": "object",
+            "properties": {
+              "security": { "type": "integer" },
+              "style":    { "type": "integer" },
+              "logic":    { "type": "integer" }
+            }
+          },
+          "posted_review_url": { "type": "string", "format": "uri" }
+        }
+      },
+      "streaming": false,
+      "format": "json",
+      "mode": "async"
+    },
+    "events": {
+      "triggers": [
+        {
+          "type": "webhook",
+          "webhook_path": "/triggers/code-review",
+          "filter": { "lang": "cel", "expr": "action == 'opened' || action == 'synchronize'", "nl": "only on PR opened or updated" }
+        },
+        { "type": "manual" }
+      ],
+      "on_tool_call": "log_tool_call_for_audit",
+      "on_complete":  "update_pr_check_status",
+      "on_error":     "post_error_comment_to_pr"
+    },
+    "runtime": {
+      "timeout_seconds": 180,
+      "max_retries": 1,
+      "retry_backoff": "exponential",
+      "concurrency": 10,
+      "async_execution": true,
+      "queue": "code-review",
+      "environment": "production"
+    },
+    "telemetry": {
+      "tracing":               true,
+      "log_level":             "info",
+      "metrics":               true,
+      "trace_context_header":  "traceparent",
+      "otlp_endpoint":         "http://otel-collector.internal:4317"
+    },
+    "evaluation": {
+      "judge_model": "gpt-4o",
+      "metrics": [
+        { "name": "task_completion",  "threshold": 0.92 },
+        { "name": "faithfulness",     "threshold": 0.88 },
+        { "name": "latency_ms",       "threshold": 120000 }
+      ],
+      "test_cases": [
+        {
+          "id": "tc-sql-injection",
+          "input": {
+            "diff": "- query = f\"SELECT * FROM users WHERE id={user_id}\"\n+ query = f\"SELECT * FROM users WHERE id={user_id}\"",
+            "language": "python",
+            "pr_context": "Fix user lookup bug",
+            "owner": "example", "repo": "app", "pull_number": 42,
+            "post_review": false
+          },
+          "criteria": "Review must flag the SQL injection vulnerability as a BLOCKER and suggest parameterised queries."
+        }
+      ]
+    },
+    "compliance": {
+      "safety_level":  "strict",
+      "pii_handling":  "detect",
+      "audit_log":     true,
+      "human_in_the_loop": {
+        "enabled":  false
+      }
+    }
+  },
+  "provenance": {
+    "authored_by":     "devtools-team",
+    "source_platform": "AutoGen",
+    "created_at":      "2026-06-10T09:00:00Z",
+    "updated_at":      "2026-06-10T10:00:00Z",
+    "license":         "MIT"
+  }
+}

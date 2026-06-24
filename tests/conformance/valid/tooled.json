@@ -1,0 +1,33 @@
+{
+  "x-sc-schema": "agent.schema.json",
+  "sc_standard": "SC-006",
+  "sc_version": "2.1.0",
+  "agent_id": "a0000001-0000-4000-8000-000000000001",
+  "status": "active",
+  "agent": {
+    "name": "Tooled Agent",
+    "goal": "Look up order status and answer customer questions.",
+    "instructions": "You are a customer support agent. Use the lookup_order tool to retrieve order details.",
+    "model": {
+      "provider": "openai",
+      "preferred": "gpt-4o-mini"
+    },
+    "tools": [
+      {
+        "name": "lookup_order",
+        "description": "Retrieve an order by ID.",
+        "protocol": "function",
+        "parameters_schema": {
+          "type": "object",
+          "required": ["order_id"],
+          "properties": {
+            "order_id": {
+              "type": "string",
+              "description": "The order identifier."
+            }
+          }
+        }
+      }
+    ]
+  }
+}

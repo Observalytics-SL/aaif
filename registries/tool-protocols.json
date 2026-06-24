@@ -1,0 +1,13 @@
+{
+  "registry": "aaif-tool-protocols",
+  "sc_standard": "SC-006",
+  "description": "Tool invocation protocols for tools[].protocol (SPECIFICATION §G). This registry is intentionally small and changes rarely; new protocols require Standards Action (a new minor version of the core schema) because every conforming runtime must understand them.",
+  "registration_policy": "Standards Action.",
+  "updated_at": "2026-06-11",
+  "entries": [
+    { "id": "function", "status": "standard", "since": "1.0.0", "needs_endpoint": false, "meaning": "In-process callable; parameters_schema forwarded to the model's function-calling API." },
+    { "id": "mcp",      "status": "standard", "since": "2.0.0", "needs_endpoint": true,  "meaning": "Model Context Protocol; endpoint is mcp://<server>/<resource> or a transport URI." },
+    { "id": "http",     "status": "standard", "since": "2.0.0", "needs_endpoint": true,  "meaning": "Raw REST; endpoint is the full URL." },
+    { "id": "openapi",  "status": "standard", "since": "2.0.0", "needs_endpoint": true,  "meaning": "OpenAPI 3.x spec; endpoint points at the spec." }
+  ]
+}

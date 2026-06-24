@@ -1,0 +1,11 @@
+{
+  "_comment": "MUST REJECT — 'agent.status' value 'running' is not in the allowed enum",
+  "x-sc-schema": "agent.schema.json",
+  "sc_standard": "SC-006",
+  "sc_version": "2.1.0",
+  "status": "running",
+  "agent": {
+    "name": "Bad Status Agent",
+    "goal": "Test bad status enum."
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "x-sc-schema": "agent-state.schema.json",
+  "sc_standard": "SC-006",
+  "sc_version": "3.0.0",
+  "state_id": "s0000001-0000-4000-8000-000000000001",
+  "agent_id": "a0000002-0000-4000-8000-000000000002",
+  "run_id": "r0000001-0000-4000-8000-000000000001",
+  "checkpoint_at": "2026-06-10T12:00:00Z",
+  "status": "paused",
+  "iteration": 1,
+  "pipeline_position": {
+    "current_step": "process_record",
+    "completed_steps": ["fetch_record"],
+    "remaining_steps": ["generate_report"]
+  },
+  "conversation": [
+    {
+      "role": "system",
+      "content": "You are a compliance-aware data processing agent."
+    },
+    {
+      "role": "user",
+      "content": "Process record 42."
+    }
+  ],
+  "variables": {
+    "record_id": "42"
+  }
+}
