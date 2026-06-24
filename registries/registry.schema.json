@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemacommons.org/SC-006/registry.schema.json",
+  "$id": "https://raw.githubusercontent.com/Observalytics-SL/aaif/main/schema/registry.schema.json",
   "title": "AAIF Extension Registry",
   "description": "Meta-schema every AAIF registry file in this directory validates against. A registry is a community-maintained, machine-readable list of allowed identifiers for one open extension point (providers, capabilities, condition languages, vault providers, memory backends, tool protocols). It lets the ecosystem grow without forking the core schema. See registries/README.md and SPECIFICATION §X.",
   "x-sc-standard": "SC-006",

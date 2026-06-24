@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemacommons.org/SC-006/agent-state.schema.json",
+  "$id": "https://raw.githubusercontent.com/Observalytics-SL/aaif/main/schema/agent-state.schema.json",
   "title": "AAIF Agent State Checkpoint",
   "description": "Autonomous Agent Interchange Format (SC-006) — companion schema for agent state checkpoints. An Agent State document captures a complete, portable snapshot of a running agent's execution context: conversation history, memory contents, pipeline position, pending tool calls, and subagent states. It is used for cross-platform live migration, pause/resume, crash recovery, and debugging. Any conforming runtime that can produce a valid Agent State document from a running agent, and restore that state into a new agent instance, achieves live portability.",
   "x-sc-standard": "SC-006",

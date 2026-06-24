@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemacommons.org/SC-006/platform-manifest.schema.json",
+  "$id": "https://raw.githubusercontent.com/Observalytics-SL/aaif/main/schema/platform-manifest.schema.json",
   "title": "AAIF Platform Manifest",
   "description": "Declares the capabilities of an AAIF-conforming runtime platform. Published by a platform operator so that orchestrators and agents can perform capability negotiation before dispatching an agent definition. Mirrors the required_capabilities[] vocabulary used in agent.schema.json §R.",
   "x-sc-standard": "SC-006",

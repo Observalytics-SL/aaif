@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemacommons.org/SC-006/agent.schema.json",
+  "$id": "https://raw.githubusercontent.com/Observalytics-SL/aaif/main/schema/agent.schema.json",
   "title": "AAIF Agent Definition",
   "description": "Autonomous Agent Interchange Format v2 (SC-006) — a portable, platform-neutral definition of an AI agent for multi-agent LLM platforms. Covers identity, model routing, orchestration topology, tool protocols, memory backends, runtime config, telemetry, evaluation, and compliance. An agent defined here can be imported and executed on any conforming runtime (LangGraph, Open WebUI, CrewAI, AutoGen, custom orchestrators) across any LLM provider.",
   "x-sc-standard": "SC-006",
