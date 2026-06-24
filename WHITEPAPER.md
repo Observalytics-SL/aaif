@@ -480,7 +480,7 @@ Historical precedent from ODBC, iCalendar, and OCI consistently shows that forma
 
 [4] Wright, A., Andrews, H., Hutton, B., and G. Dennis. "JSON Schema: A Media Type for Describing JSON Documents," IETF Internet-Draft, draft-bhutton-json-schema-01, 2020. https://json-schema.org/specification
 
-[5] van Bussel, B. "Autonomous Agent Interchange Format," Schema Commons SC-006 v3.4.0, Observalytics SL, June 2026. https://schemacommons.org/SC-006/
+[5] van Bussel, B. "Autonomous Agent Interchange Format," Schema Commons SC-006 v3.4.0, Observalytics SL, June 2026. https://github.com/Observalytics-SL/aaif
 
 [6] van Bussel, B. "Agent Registry Protocol," Schema Commons SC-013, Observalytics SL, June 2026.
 

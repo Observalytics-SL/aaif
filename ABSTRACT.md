@@ -3,8 +3,8 @@
 **Standard:** SC-006 · **Full name:** Autonomous Agent Interchange Format
 **Acronym:** AAIF · **Version:** 3.4.0 · **Status:** Public Draft
 **License:** CC BY 4.0 · **Date:** June 2026
-**Repository:** https://github.com/Observalytics-SL/Frameworks/tree/main/SC-006-agent-interchange-format
-**Schema:** https://schemacommons.org/SC-006/agent.schema.json
+**Repository:** https://github.com/Observalytics-SL/aaif
+**Schema:** https://raw.githubusercontent.com/Observalytics-SL/aaif/main/schema/agent.schema.json
 **Namespace:** https://schemacommons.org/SC-006/vocab#
 
 ---
@@ -76,7 +76,7 @@ AI agents · multi-agent systems · LLM orchestration · agent portability · in
   month     = {June},
   type      = {Public Draft},
   institution = {Schema Commons},
-  url       = {https://schemacommons.org/SC-006/},
+  url       = {https://github.com/Observalytics-SL/aaif},
   note      = {CC BY 4.0. Schemas: agent.schema.json, agent-state.schema.json, platform-manifest.schema.json (all sc_version 3.4.0)}
 }
 ```
