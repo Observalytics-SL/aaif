@@ -925,8 +925,9 @@ application/cbor; profile="https://schemacommons.org/SC-006/cbor"
         </dd>
         <dt>Agent Persistent State Profile (APS)</dt>
         <dd>
-          draft-gaikwad-aps-profile-00 <xref target="APS"/> is an active IETF
-          individual draft specifying a storage <em>service class</em> — an
+          draft-gaikwad-aps-profile-00 <xref target="APS"/> is an IETF
+          individual draft (expired June 2026, not adopted by any working
+          group) specifying a storage <em>service class</em> — an
           "AgentPersistentState" usage class with a versioned
           "PersistentStateLineOfService" schema, bound non-normatively to the SNIA
           Swordfish/Redfish storage-management standards, covering crash consistency,
@@ -1226,13 +1227,13 @@ application/cbor; profile="https://schemacommons.org/SC-006/cbor"
         <reference anchor="APS"
                    target="https://datatracker.ietf.org/doc/draft-gaikwad-aps-profile/">
           <front>
-            <title>Agent Persistent State Profile (APS)</title>
-            <author fullname="Gaikwad, et al.">
+            <title>Agent Persistent State Profile</title>
+            <author initials="M." surname="Gaikwad" fullname="Madhava Gaikwad">
               <organization/>
             </author>
-            <date year="2026"/>
+            <date year="2025" month="November"/>
           </front>
-          <refcontent>Work in Progress</refcontent>
+          <refcontent>Work in Progress (expired)</refcontent>
           <seriesInfo name="Internet-Draft" value="draft-gaikwad-aps-profile-00"/>
         </reference>
 
