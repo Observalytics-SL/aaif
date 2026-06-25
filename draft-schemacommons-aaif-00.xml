@@ -820,7 +820,7 @@ Content-Type: application/x-aaif-handoff+ndjson
         CBOR-encoded documents.  The media type for CBOR-encoded AAIF documents is:
       </t>
       <artwork name="" type="" align="left" alt=""><![CDATA[
-application/cbor; profile="https://github.com/Observalytics-SL/aaif/cbor"
+application/cbor; profile="https://schemacommons.org/SC-006/cbor"
 ]]></artwork>
       <t>
         Implementations <bcp14>MUST NOT</bcp14> use integer keys as a compression

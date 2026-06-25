@@ -693,7 +693,7 @@ AAIF documents are canonically JSON. For bandwidth-constrained transports — em
 
 1. **Logical structure is identical.** Field names, enum values, required/optional semantics, and all constraints in `agent.schema.json` and `agent-state.schema.json` apply without modification to CBOR-encoded documents.
 2. **No separate schema.** There is no `agent.cbor-schema`; validators round-trip to JSON before schema validation.
-3. **Media type.** CBOR-encoded AAIF documents use the media type `application/cbor` with a content-type parameter: `application/cbor; profile="https://github.com/Observalytics-SL/aaif/cbor"`.
+3. **Media type.** CBOR-encoded AAIF documents use the media type `application/cbor` with a content-type parameter: `application/cbor; profile="https://schemacommons.org/SC-006/cbor"`.
 4. **Diagnostic notation.** When displaying or logging a CBOR-encoded AAIF document, use CBOR diagnostic notation (RFC 8949 §8) — human-readable but lossless.
 5. **Integer key maps.** Implementations MUST NOT use integer keys (CBOR Major Type 0 map) as a compression scheme. Field names remain UTF-8 text strings so that JSON round-trips are lossless.
 6. **Interop requirement.** Any platform claiming AAIF conformance at **Portable** level or above that accepts CBOR-encoded agent definitions MUST also accept the equivalent JSON encoding and produce identical behaviour.

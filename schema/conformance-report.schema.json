@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/Observalytics-SL/aaif/main/schema/conformance-report.schema.json",
+  "$id": "https://schemacommons.org/SC-006/conformance-report.schema.json",
   "title": "AAIF Conformance Self-Certification Report",
   "description": "A machine-readable, self-published statement of a platform's AAIF (SC-006) conformance. Published at /.well-known/aaif-conformance.json. Lets orchestrators, CI pipelines, and the adopter registry verify a platform's claimed conformance level and supported registries before dispatching agents. See SPECIFICATION §Y and CONFORMANCE.md. Self-certification is honour-based but machine-checkable: the claim references a public test-suite result.",
   "x-sc-standard": "SC-006",
