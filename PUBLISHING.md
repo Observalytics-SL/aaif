@@ -8,9 +8,9 @@ An IETF Internet-Draft becomes public and permanently archived on the Datatracke
 
 The §N "Related Work & Mapping to Prior Art" section of [SPECIFICATION.md](SPECIFICATION.md) reflects the current state of that diligence. The core AAIF claim — that no existing standard defines a portable, vendor-neutral agent *definition* document — held up under a real, targeted search: the closest adjacent efforts (draft-gaikwad-aps-profile-00, OpenTelemetry GenAI semantic conventions, OpenInference, MCP's own roadmap-documented observability gap) all address different layers or different problems, and §N states plainly where each one is complementary rather than competing.
 
-One item needs re-checking before submission rather than being treated as settled: **draft-gaikwad-aps-profile-00** is an active, evolving IETF individual draft touching the adjacent Agent State area. Individual drafts can change shape, get adopted into a working group, or be superseded between revisions. Re-verify its current status and content against §N's characterization immediately before filing, not from this snapshot.
+**draft-gaikwad-aps-profile-00** was flagged as the closest adjacent work (Agent State area). As of June 2026 it has **expired** on the IETF Datatracker with no WG adoption and no stream assignment. Its scope was Kubernetes-layer storage infrastructure (crash consistency, vector indexing, cryptographic erasure) — different from AAIF's schema-level state capture. The characterisation in §N remains accurate; no update required before filing.
 
-**Submission status: READY FOR INITIAL FILING.** Prior-art diligence is complete (see §N of SPECIFICATION.md). The draft (draft-schemacommons-aaif-00.xml) is clean and submission-ready. Verify the current status of draft-gaikwad-aps-profile-00 on the IETF Datatracker immediately before filing and update §N if the characterisation has changed.
+**Submission status: READY FOR INITIAL FILING.** No blocking prior art identified. All individual I-Ds in the adjacent agent-definition, agent-state, and agent-discovery spaces remain unaffiliated individual submissions with no WG home as of June 2026. The draft (draft-schemacommons-aaif-00.xml) is clean and submission-ready.
 
 ## 1. Archival + DOI (citable today)
 
