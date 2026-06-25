@@ -191,6 +191,6 @@ runtime_timeout = agent.get("runtime", {}).get("timeout_seconds", 120)
 | Standard | What it adds |
 |----------|-------------|
 | [ACPM — SC-014](https://github.com/Observalytics-SL/acpm) | Capability profiles: what an agent, platform, tool, or model *offers* — trust, cost, SLA, delegation |
-| ARP — SC-013 *(forthcoming)* | Agent registry and discovery: how to publish and find AAIF agents in a registry |
+| [AREG — SC-013](https://github.com/Observalytics-SL/areg) | Agent registry: how to publish and discover AAIF agents |
 
 *Licensed CC BY 4.0 — part of [Schema Commons](https://github.com/Observalytics-SL).*
