@@ -1,6 +1,6 @@
 # SC-006 · AAIF — Autonomous Agent Interchange Format
 
-[![Schema Commons Standard](assets/schema-commons-badge.svg)](https://github.com/Observalytics-SL) ![Draft 3.4](https://img.shields.io/badge/status-draft%203.4-orange) [![Cite](https://img.shields.io/badge/cite-CITATION.cff-blue)](CITATION.cff)
+[![Schema Commons Standard](assets/schema-commons-badge.svg)](https://github.com/Observalytics-SL) ![Draft 3.4](https://img.shields.io/badge/status-draft%203.4-orange) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20845316.svg)](https://doi.org/10.5281/zenodo.20845316) [![Cite](https://img.shields.io/badge/cite-CITATION.cff-blue)](CITATION.cff)
 
 > **Portable AI agents.** ChatGPT, Claude, Gemini, Cline, Continue, Open WebUI, LangGraph, CrewAI, AutoGen — every platform invents its own agent format. AAIF is the "Agent Common Information Model": define an agent once, run it anywhere.
 

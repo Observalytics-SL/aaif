@@ -28,13 +28,14 @@ authors:
     family-names: "Contributors"
 license: CC-BY-4.0
 version: "3.4.0"
-date-released: "2026-06-11"
-repository-code: "https://github.com/Observalytics-SL/Frameworks"
-url: "https://github.com/Observalytics-SL/Frameworks/tree/main/SC-006-agent-interchange-format"
+date-released: "2026-06-25"
+repository-code: "https://github.com/Observalytics-SL/aaif"
+url: "https://schemacommons.org/SC-006"
+doi: "10.5281/zenodo.20845316"
 identifiers:
   - type: other
     value: "SC-006"
     description: "Schema Commons standard identifier."
   - type: doi
-    value: "10.5281/zenodo.0000000"
-    description: "Placeholder Zenodo DOI — replace with the minted DOI on first archived release."
+    value: "10.5281/zenodo.20845316"
+    description: "Zenodo archived release DOI."
