@@ -4,7 +4,7 @@ AAIF is a data-format standard, but agent definitions describe systems that exec
 
 ## Reporting a vulnerability
 
-- **Reference tooling** (`tools/`, the `aaif` package): report privately to **security@schemacommons.org**. Please do not open a public issue for an exploitable bug. We aim to acknowledge within 5 business days and to publish a fix or advisory within 90 days.
+- **Reference tooling** (`tools/`, the `aaif` package): report privately to **security@observalytics.com**. Please do not open a public issue for an exploitable bug. We aim to acknowledge within 5 business days and to publish a fix or advisory within 90 days.
 - **Specification weaknesses** (a construct that is unsafe by design, an under-specified MUST, a missing guardrail): open a public issue titled `[security] SC-006: <summary>` so it can be discussed and corrected in the open.
 
 Please include: affected file/section or version, a minimal reproducing AAIF document or steps, and the impact you observed.

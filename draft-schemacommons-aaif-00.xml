@@ -820,7 +820,7 @@ Content-Type: application/x-aaif-handoff+ndjson
         CBOR-encoded documents.  The media type for CBOR-encoded AAIF documents is:
       </t>
       <artwork name="" type="" align="left" alt=""><![CDATA[
-application/cbor; profile="https://schemacommons.org/SC-006/cbor"
+application/cbor; profile="https://github.com/Observalytics-SL/aaif/cbor"
 ]]></artwork>
       <t>
         Implementations <bcp14>MUST NOT</bcp14> use integer keys as a compression
@@ -1052,7 +1052,7 @@ application/cbor; profile="https://schemacommons.org/SC-006/cbor"
           <dt>Fragment identifier considerations</dt><dd>None.</dd>
           <dt>Restrictions on usage</dt><dd>None.</dd>
           <dt>Author</dt><dd>Bob van Bussel, bob@observalytics.com</dd>
-          <dt>Change controller</dt><dd>Schema Commons (https://github.com/Observalytics-SL/Frameworks)</dd>
+          <dt>Change controller</dt><dd>Observalytics SL (https://github.com/Observalytics-SL)</dd>
         </dl>
       </section>
 

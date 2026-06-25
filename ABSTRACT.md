@@ -5,7 +5,7 @@
 **License:** CC BY 4.0 · **Date:** June 2026
 **Repository:** https://github.com/Observalytics-SL/aaif
 **Schema:** https://raw.githubusercontent.com/Observalytics-SL/aaif/main/schema/agent.schema.json
-**Namespace:** https://schemacommons.org/SC-006/vocab#
+**Namespace:** https://github.com/Observalytics-SL/aaif/vocab#
 
 ---
 
@@ -87,4 +87,4 @@ AI agents · multi-agent systems · LLM orchestration · agent portability · in
 
 - **Issues and proposals:** https://github.com/Observalytics-SL/Frameworks/issues
 - **Working group:** See CONTRIBUTING.md in the repository
-- **General enquiries:** hello@schemacommons.org *(forthcoming)*
+- **General enquiries:** hello@observalytics.com *(forthcoming)*

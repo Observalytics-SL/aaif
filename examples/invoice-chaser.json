@@ -33,7 +33,7 @@
       {
         "type": "schema_ref",
         "label": "Invoice schema (SC-005)",
-        "value": "https://schemacommons.org/SC-005/business-object.schema.json",
+        "value": "https://github.com/Observalytics-SL/sbos/business-object.schema.json",
         "description": "Structure of the invoice objects returned by list_overdue_invoices."
       },
       {
@@ -63,7 +63,7 @@
         },
         "output_schema": {
           "type": "array",
-          "items": { "$ref": "https://schemacommons.org/SC-005/business-object.schema.json" }
+          "items": { "$ref": "https://github.com/Observalytics-SL/sbos/business-object.schema.json" }
         },
         "auth": { "type": "bearer", "env_var": "ACCOUNTING_API_TOKEN" },
         "cache_ttl_seconds": 300,

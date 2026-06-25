@@ -53,10 +53,10 @@ One item needs re-checking before submission rather than being treated as settle
 
 | Purpose | URI |
 |---------|-----|
-| Standard landing page | `https://schemacommons.org/SC-006` |
-| Agent schema `$id` | `https://schemacommons.org/SC-006/agent.schema.json` |
-| Versioned schema | `https://schemacommons.org/SC-006/3.4.0/agent.schema.json` |
-| JSON-LD context | `https://schemacommons.org/SC-006/context.jsonld` |
+| Standard landing page | `https://github.com/Observalytics-SL/aaif` |
+| Agent schema `$id` | `https://github.com/Observalytics-SL/aaif/agent.schema.json` |
+| Versioned schema | `https://github.com/Observalytics-SL/aaif/3.4.0/agent.schema.json` |
+| JSON-LD context | `https://raw.githubusercontent.com/Observalytics-SL/aaif/main/context.jsonld` |
 | Platform manifest well-known | `/.well-known/aaif-manifest.json` |
 | Conformance report well-known | `/.well-known/aaif-conformance.json` |
 

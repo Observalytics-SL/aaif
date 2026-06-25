@@ -302,7 +302,7 @@ Python reference implementation of AAIF (SC-006):
 
 **CBOR encoding specification: SPECIFICATION.md §T**
 
-Documents how AAIF agent definitions may optionally be encoded as CBOR (RFC 8949) for bandwidth-constrained environments. No separate schema; round-trips through JSON for validation. Media type: `application/cbor; profile="https://schemacommons.org/SC-006/cbor"`.
+Documents how AAIF agent definitions may optionally be encoded as CBOR (RFC 8949) for bandwidth-constrained environments. No separate schema; round-trips through JSON for validation. Media type: `application/cbor; profile="https://github.com/Observalytics-SL/aaif/cbor"`.
 
 **Platform Manifest discovery: SPECIFICATION.md §U**
 
