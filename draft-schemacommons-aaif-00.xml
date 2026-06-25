@@ -22,7 +22,7 @@
       </address>
     </author>
 
-    <date year="2026" month="June"/>
+    <date year="2026" month="June" day="25"/>
     <area>ART</area>
 
     <keyword>AI agents</keyword>
@@ -592,7 +592,11 @@ AgentDefinition (root)
         and an expression string:
       </t>
       <artwork name="" type="" align="left" alt=""><![CDATA[
-{ "lang": "jsonpath", "expr": "$.task.type", "nl": "task type is code_review" }
+{
+  "lang": "jsonpath",
+  "expr": "$.task.type",
+  "nl": "task type is code_review"
+}
 ]]></artwork>
       <t>Supported languages are:</t>
       <ul spacing="normal">
@@ -909,11 +913,11 @@ application/cbor; profile="https://schemacommons.org/SC-006/cbor"
         </dd>
         <dt>A2A Agent Card</dt>
         <dd>
-          The A2A Agent Card is a minimal discovery document advertising an agent's
-          identity, capability tags, and endpoint URL.  It is deliberately thin by
-          design.  An AAIF definition carries a superset of Agent Card information and
-          can generate a conformant Agent Card.  A2A addresses agent-to-agent runtime
-          messaging; AAIF addresses portable agent definition.
+          The A2A Agent Card <xref target="A2A"/> is a minimal discovery document
+          advertising an agent's identity, capability tags, and endpoint URL.  It is
+          deliberately thin by design.  An AAIF definition carries a superset of Agent
+          Card information and can generate a conformant Agent Card.  A2A addresses
+          agent-to-agent runtime messaging; AAIF addresses portable agent definition.
         </dd>
         <dt>OpenAI Assistants API</dt>
         <dd>
@@ -1189,6 +1193,17 @@ application/cbor; profile="https://schemacommons.org/SC-006/cbor"
           </front>
           <seriesInfo name="RFC" value="5545"/>
           <seriesInfo name="DOI" value="10.17487/RFC5545"/>
+        </reference>
+
+        <reference anchor="A2A"
+                   target="https://github.com/a2aproject/A2A">
+          <front>
+            <title>Agent2Agent Protocol</title>
+            <author>
+              <organization>Linux Foundation (Agent2Agent Project)</organization>
+            </author>
+            <date year="2025"/>
+          </front>
         </reference>
 
         <reference anchor="MCP"
