@@ -454,7 +454,7 @@ Historical precedent suggests that adoption acceleration requires several specif
 
 ### Relation to the Emerging Agent Stack
 
-AAIF addresses the agent-definition layer. It is designed to compose with adjacent standards addressing other layers of the multi-agent portability problem. AAIF (agent definition) + SC-013 Agent Registry Protocol [ARP, 6] (discovery and federation of agent definitions) + SC-014 Agent Capability and Profile Model [ACPM, 7] (capability trust, cost profiling, and platform matching) together address a coherent vertical slice of the agent infrastructure problem: how an agent is defined, how it is discovered, and how its capabilities and costs are communicated to orchestrators and operators. Each of these standards is independently useful and independently citable; the value of composition is that a platform implementing all three can offer end-to-end agent lifecycle management across heterogeneous runtimes.
+AAIF addresses the agent-definition layer. It is designed to compose with adjacent standards addressing other layers of the multi-agent portability problem. AAIF (agent definition) + SC-013 Agent Registry [AREG, 6] (discovery and federation of agent definitions) + SC-014 Agent Capability and Profile Model [ACPM, 7] (capability trust, cost profiling, and platform matching) together address a coherent vertical slice of the agent infrastructure problem: how an agent is defined, how it is discovered, and how its capabilities and costs are communicated to orchestrators and operators. Each of these standards is independently useful and independently citable; the value of composition is that a platform implementing all three can offer end-to-end agent lifecycle management across heterogeneous runtimes.
 
 ---
 

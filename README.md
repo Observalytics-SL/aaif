@@ -81,18 +81,16 @@ AAIF is built to be adopted, extended, and cited by anyone — without asking pe
 
 - **Extend without forking.** Open extension points (providers, capabilities, condition languages, vault providers, memory backends, tool protocols) live in community [`registries/`](registries/) with IANA-style registration policies. Add an identifier by pull request; no schema version bump. The schema enums are just a *recommended subset*. See [SPECIFICATION §X](SPECIFICATION.md).
 - **Verify conformance.** Self-certify per level and direction against the public test suite and publish a machine-readable report at `/.well-known/aaif-conformance.json`. See [CONFORMANCE.md](CONFORMANCE.md).
-- **Prove portability.** The reference `aaif` package round-trips agents **OpenAI Assistants ↔ AAIF** losslessly (`tools/test_roundtrip.py`), with one-way exporters for LangGraph / CrewAI / AutoGen.
+- **Prove portability.** The reference `aaif` package converts agents to and from OpenAI Assistants, with one-way exporters for LangGraph / CrewAI / AutoGen.
 - **Cite it.** [`CITATION.cff`](CITATION.cff) + a Zenodo DOI; see [PUBLISHING.md](PUBLISHING.md) for the arXiv / IETF Internet-Draft / W3C Community Group paths.
 - **Report issues safely.** [SECURITY.md](SECURITY.md) defines the threat model and disclosure process.
 
 ```bash
-# validate, summarise, convert, import, and run the conformance/registry/round-trip suites
+# validate, convert, import
 PYTHONPATH=tools python -m aaif validate examples/invoice-chaser.json
 PYTHONPATH=tools python -m aaif convert  examples/invoice-chaser.json --target openai_assistant
 PYTHONPATH=tools python -m aaif import   my-assistant.json --source openai_assistant
-python tools/test_conformance.py SC-006-agent-interchange-format
-python tools/test_registries.py  SC-006-agent-interchange-format
-python tools/test_roundtrip.py   SC-006-agent-interchange-format
+python tools/validate.py
 ```
 
 ## Who benefits
@@ -133,7 +131,7 @@ python tools/test_roundtrip.py   SC-006-agent-interchange-format
 ## Validate
 
 ```bash
-python ../tools/validate.py SC-006-agent-interchange-format
+python tools/validate.py
 ```
 
 ## Quick start: importing an agent
@@ -178,9 +176,9 @@ runtime_timeout = agent.get("runtime", {}).get("timeout_seconds", 120)
 >
 > Every LLM framework — LangGraph, CrewAI, AutoGen, Open WebUI, Cline — stores agents differently. So every agent you build is a silo.
 >
-> We just upgraded **AAIF (SC-006)** to v2: the open "Agent Common Information Model" for multi-agent LLM platforms.
+> We just published **AAIF (SC-006) v3.4** — the open "Agent Common Information Model" for multi-agent LLM platforms.
 >
-> New in v2: multi-provider routing with fallbacks (14 providers), parallel swarm + pipeline topologies, tool auth, vector memory backends, OpenTelemetry, LLM-as-judge evaluation, and enterprise compliance (GDPR residency, PII handling, audit log, HITL).
+> Covers: multi-provider routing with fallbacks (16 providers), parallel swarm + pipeline topologies, tool auth, vector memory backends, OpenTelemetry, LLM-as-judge evaluation, enterprise compliance (GDPR residency, PII handling, audit log, HITL), and live agent state migration across runtimes.
 >
 > Define an agent once. Run it on any runtime. Share it in a common library.
 >
@@ -188,4 +186,11 @@ runtime_timeout = agent.get("runtime", {}).get("timeout_seconds", 120)
 >
 > #AIagents #MultiAgent #MCP #OpenStandards #SchemaCommons #LLM #LangGraph #CrewAI #AutoGen
 
-*Licensed CC BY 4.0 — part of [Schema Commons](../README.md).*
+## Companion standards
+
+| Standard | What it adds |
+|----------|-------------|
+| [ACPM — SC-014](https://github.com/Observalytics-SL/acpm) | Capability profiles: what an agent, platform, tool, or model *offers* — trust, cost, SLA, delegation |
+| ARP — SC-013 *(forthcoming)* | Agent registry and discovery: how to publish and find AAIF agents in a registry |
+
+*Licensed CC BY 4.0 — part of [Schema Commons](https://github.com/Observalytics-SL).*
