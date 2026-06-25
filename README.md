@@ -170,22 +170,6 @@ runtime_timeout = agent.get("runtime", {}).get("timeout_seconds", 120)
 
 > **Pick a target, don't climb to the top.** Most of AAIF's value lands at **Portable → Enterprise** (all expressible in `agent.schema.json`). **Stateful** is a separate advanced tier covering v3 live state, migration, and streaming handoff — adopt it only when live pause/resume or cross-runtime migration is an actual requirement. See [SPECIFICATION §M](SPECIFICATION.md).
 
-## 📣 Ready-to-post LinkedIn announcement
-
-> Your AI agent is trapped in one platform.
->
-> Every LLM framework — LangGraph, CrewAI, AutoGen, Open WebUI, Cline — stores agents differently. So every agent you build is a silo.
->
-> We just published **AAIF (SC-006) v3.4** — the open "Agent Common Information Model" for multi-agent LLM platforms.
->
-> Covers: multi-provider routing with fallbacks (16 providers), parallel swarm + pipeline topologies, tool auth, vector memory backends, OpenTelemetry, LLM-as-judge evaluation, enterprise compliance (GDPR residency, PII handling, audit log, HITL), and live agent state migration across runtimes.
->
-> Define an agent once. Run it on any runtime. Share it in a common library.
->
-> Part of **Schema Commons** — the Creative Commons for data schemas.
->
-> #AIagents #MultiAgent #MCP #OpenStandards #SchemaCommons #LLM #LangGraph #CrewAI #AutoGen
-
 ## Companion standards
 
 | Standard | What it adds |
