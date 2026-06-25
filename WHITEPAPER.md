@@ -482,7 +482,7 @@ Historical precedent from ODBC, iCalendar, and OCI consistently shows that forma
 
 [5] van Bussel, B. "Autonomous Agent Interchange Format," Schema Commons SC-006 v3.4.0, Observalytics SL, June 2026. https://github.com/Observalytics-SL/aaif
 
-[6] van Bussel, B. "Agent Registry Protocol," Schema Commons SC-013, Observalytics SL, June 2026.
+[6] van Bussel, B. "Agent Registry Protocol," Schema Commons SC-013, Observalytics SL, 2026. (forthcoming)
 
 [7] van Bussel, B. "Agent Capability and Profile Model," Schema Commons SC-014 v1.0.0, Observalytics SL, June 2026.
 
