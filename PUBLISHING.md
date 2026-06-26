@@ -64,4 +64,4 @@ When the domain is live, schema `$id`s SHOULD resolve to the schema file and SHO
 
 ## Status
 
-AAIF is a **public draft**. It has no external adopters yet; see the honest status note in the [README](README.md). The fastest credibility wins are: (1) mint a DOI, (2) land one independent runtime adopter, (3) post the arXiv whitepaper.
+AAIF v3.4.0 is a **public draft**. DOI minted (10.5281/zenodo.20845316). IETF Internet-Draft (`draft-schemacommons-aaif-00`) is submission-ready — see above for the Datatracker link. One external adopter listed in [ADOPTERS.md](ADOPTERS.md). arXiv submission and W3C Community Group remain pending.

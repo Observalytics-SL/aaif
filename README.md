@@ -2,7 +2,7 @@
 
 [![Schema Commons Standard](assets/schema-commons-badge.svg)](https://github.com/Observalytics-SL) ![Draft 3.4](https://img.shields.io/badge/status-draft%203.4-orange) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20845316.svg)](https://doi.org/10.5281/zenodo.20845316) [![Cite](https://img.shields.io/badge/cite-CITATION.cff-blue)](CITATION.cff)
 
-> **Portable AI agents.** ChatGPT, Claude, Gemini, Cline, Continue, Open WebUI, LangGraph, CrewAI, AutoGen — every platform invents its own agent format. AAIF is the "Agent Common Information Model": define an agent once, run it anywhere.
+> **Portable AI agent definitions.** AI agent frameworks each use a proprietary format for goals, model routing, tools, memory, and orchestration topology. AAIF is a vendor-neutral JSON Schema document format that captures all of that in a single file any conforming runtime can execute.
 
 ## The problem
 
@@ -75,9 +75,7 @@ Two known design trade-offs are documented rather than hidden: routing/handoff c
 
 AAIF supports 16 providers out of the box: `openai`, `anthropic`, `google`, `vertex_ai`, `mistral`, `cohere`, `groq`, `ollama`, `azure_openai`, `bedrock`, `huggingface`, `together`, `fireworks`, `deepseek`, `xai`, `openrouter`. Anything else — GitHub Copilot, Cline-routed endpoints, self-hosted LiteLLM/vLLM gateways — uses `provider: "custom"` with `provider_id` + `base_url` (no enum churn). Set `model.routing_strategy` to `cost`, `latency`, `quality`, or `round_robin` for platform-level optimisation.
 
-## An open standard, not just a schema
-
-AAIF is built to be adopted, extended, and cited by anyone — without asking permission and without forking:
+## Extensibility, tooling, and citation
 
 - **Extend without forking.** Open extension points (providers, capabilities, condition languages, vault providers, memory backends, tool protocols) live in community [`registries/`](registries/) with IANA-style registration policies. Add an identifier by pull request; no schema version bump. The schema enums are just a *recommended subset*. See [SPECIFICATION §X](SPECIFICATION.md).
 - **Verify conformance.** Self-certify per level and direction against the public test suite and publish a machine-readable report at `/.well-known/aaif-conformance.json`. See [CONFORMANCE.md](CONFORMANCE.md).
@@ -93,7 +91,7 @@ PYTHONPATH=tools python -m aaif import   my-assistant.json --source openai_assis
 python tools/validate.py
 ```
 
-## Who benefits
+## Use cases
 
 | Role | Benefit |
 |------|---------|

@@ -61,14 +61,3 @@ Platforms that publish a [conformance report](CONFORMANCE.md) at `/.well-known/a
 |----------|------------------|-----------|--------|
 | *(your platform here)* | | | `https://…/.well-known/aaif-conformance.json` |
 
----
-
-## Wanted: first independent adopters
-
-We are actively seeking the first three independent platform adoptions. If you are building or operating a multi-agent LLM platform and would like to add AAIF support, please open an issue titled `[Adoption] <Platform name>`. We will:
-
-- Help map your existing agent format to AAIF
-- Co-author a converter if needed
-- Credit your platform as a founding adopter in the white paper
-
-Platforms we would most like to see AAIF support in: **Open WebUI**, **LangGraph**, **CrewAI**, **AutoGen**, **Semantic Kernel**, **Haystack**, **BeeAI**.
