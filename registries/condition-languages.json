@@ -1,0 +1,15 @@
+{
+  "registry": "aaif-condition-languages",
+  "sc_standard": "SC-006",
+  "description": "Expression languages allowed in the structured Condition type (SPECIFICATION §V) used by when / handoff.condition / triggers.filter / human_in_the_loop.trigger. Platforms advertise supported languages in their Platform Manifest (capabilities.orchestration.condition_languages[]).",
+  "registration_policy": "Specification Required. A registered language MUST have a public, versioned grammar/spec and deterministic evaluation semantics. LLM-interpreted 'languages' are NOT eligible — that is what the bare-string hint form is for.",
+  "updated_at": "2026-06-11",
+  "entries": [
+    { "id": "jsonpath",  "status": "standard", "since": "3.2.0", "expr_type": "string", "spec": "https://www.rfc-editor.org/rfc/rfc9535", "eval": "Evaluate the JSONPath query against the input/payload; truthy if it yields a non-empty result." },
+    { "id": "jmespath",  "status": "standard", "since": "3.2.0", "expr_type": "string", "spec": "https://jmespath.org/specification.html", "eval": "Evaluate the JMESPath query; truthy if the result is truthy." },
+    { "id": "cel",       "status": "standard", "since": "3.2.0", "expr_type": "string", "spec": "https://github.com/google/cel-spec", "eval": "Common Expression Language boolean expression over the payload." },
+    { "id": "jsonlogic", "status": "standard", "since": "3.2.0", "expr_type": "object", "spec": "https://jsonlogic.com", "eval": "Evaluate the JsonLogic rule object against the payload." },
+    { "id": "always",    "status": "standard", "since": "3.2.0", "expr_type": "none",   "spec": null, "eval": "Constant true." },
+    { "id": "never",     "status": "standard", "since": "3.2.0", "expr_type": "none",   "spec": null, "eval": "Constant false." }
+  ]
+}

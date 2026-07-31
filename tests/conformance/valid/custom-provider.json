@@ -1,0 +1,16 @@
+{
+  "_comment": "MUST PASS — provider 'custom' (e.g. GitHub Copilot / Cline / self-hosted gateway) named via provider_id + base_url.",
+  "x-sc-schema": "agent.schema.json",
+  "sc_standard": "SC-006",
+  "sc_version": "3.2.0",
+  "agent": {
+    "name": "Custom Provider Agent",
+    "goal": "Route to a provider not covered by the built-in enum.",
+    "model": {
+      "provider": "custom",
+      "provider_id": "copilot",
+      "base_url": "https://api.githubcopilot.com",
+      "preferred": "gpt-4o"
+    }
+  }
+}

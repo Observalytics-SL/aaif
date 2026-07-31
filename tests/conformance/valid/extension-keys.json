@@ -1,0 +1,12 @@
+{
+  "x-sc-schema": "agent.schema.json",
+  "_comment": "SC-006 §W: vendor extension (x-*) and _comment keys are legal at the document root.",
+  "sc_standard": "SC-006",
+  "sc_version": "3.3.0",
+  "x-acme-pipeline-id": "build-4711",
+  "x-acme-metadata": { "team": "platform", "cost_center": 42 },
+  "agent": {
+    "name": "Extension-Annotated Agent",
+    "goal": "Demonstrate that x-* and _comment extension keys validate at the root."
+  }
+}

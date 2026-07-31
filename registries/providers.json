@@ -1,0 +1,32 @@
+{
+  "registry": "aaif-model-providers",
+  "sc_standard": "SC-006",
+  "description": "Canonical registry of LLM provider identifiers for model.provider. The agent.schema.json enum carries a recommended subset; this registry is the authoritative living list. Vendors add entries here via pull request (see registries/README.md) WITHOUT requiring a schema version bump. Identifiers not yet registered MUST be expressed as model.provider='custom' with model.provider_id set.",
+  "registration_policy": "Specification Required (a public, stable provider API endpoint or docs URL).",
+  "updated_at": "2026-06-11",
+  "entries": [
+    { "id": "openai",       "status": "standard",    "since": "1.0.0", "docs": "https://platform.openai.com/docs", "openai_compatible": true,  "notes": "Reference provider." },
+    { "id": "anthropic",    "status": "standard",    "since": "1.0.0", "docs": "https://docs.anthropic.com",       "openai_compatible": false, "notes": "Messages API; supports extended thinking via params.extended." },
+    { "id": "google",       "status": "standard",    "since": "1.0.0", "docs": "https://ai.google.dev",            "openai_compatible": false, "notes": "Gemini Developer API." },
+    { "id": "vertex_ai",    "status": "standard",    "since": "3.2.0", "docs": "https://cloud.google.com/vertex-ai", "openai_compatible": false, "notes": "Google Cloud hosted models incl. third-party publishers." },
+    { "id": "mistral",      "status": "standard",    "since": "1.0.0", "docs": "https://docs.mistral.ai",          "openai_compatible": true,  "notes": null },
+    { "id": "cohere",       "status": "standard",    "since": "1.0.0", "docs": "https://docs.cohere.com",          "openai_compatible": false, "notes": null },
+    { "id": "groq",         "status": "standard",    "since": "1.0.0", "docs": "https://console.groq.com/docs",    "openai_compatible": true,  "notes": null },
+    { "id": "ollama",       "status": "standard",    "since": "1.0.0", "docs": "https://ollama.com",               "openai_compatible": true,  "notes": "Self-hosted; set model.base_url." },
+    { "id": "azure_openai", "status": "standard",    "since": "1.0.0", "docs": "https://learn.microsoft.com/azure/ai-services/openai", "openai_compatible": true, "notes": "preferred is the deployment name." },
+    { "id": "bedrock",      "status": "standard",    "since": "1.0.0", "docs": "https://docs.aws.amazon.com/bedrock", "openai_compatible": false, "notes": "AWS-hosted multi-vendor." },
+    { "id": "huggingface",  "status": "standard",    "since": "1.0.0", "docs": "https://huggingface.co/docs/inference-endpoints", "openai_compatible": false, "notes": null },
+    { "id": "together",     "status": "standard",    "since": "1.0.0", "docs": "https://docs.together.ai",         "openai_compatible": true,  "notes": null },
+    { "id": "fireworks",    "status": "standard",    "since": "1.0.0", "docs": "https://docs.fireworks.ai",        "openai_compatible": true,  "notes": null },
+    { "id": "deepseek",     "status": "standard",    "since": "1.0.0", "docs": "https://api-docs.deepseek.com",    "openai_compatible": true,  "notes": null },
+    { "id": "xai",          "status": "standard",    "since": "1.0.0", "docs": "https://docs.x.ai",                "openai_compatible": true,  "notes": null },
+    { "id": "openrouter",   "status": "standard",    "since": "3.2.0", "docs": "https://openrouter.ai/docs",       "openai_compatible": true,  "notes": "Aggregator gateway; model ids are 'vendor/model'." },
+    { "id": "custom",       "status": "standard",    "since": "2.1.0", "docs": null,                                "openai_compatible": null,  "notes": "Escape hatch. REQUIRES model.provider_id; set model.base_url for the endpoint." },
+
+    { "id": "copilot",      "status": "provisional", "since": "3.2.0", "docs": "https://docs.github.com/copilot",  "openai_compatible": true,  "notes": "Use as provider='custom', provider_id='copilot' until promoted to standard." },
+    { "id": "cline",        "status": "provisional", "since": "3.2.0", "docs": "https://cline.bot",                "openai_compatible": true,  "notes": "Client/router; use provider='custom', provider_id='cline'." },
+    { "id": "litellm",      "status": "provisional", "since": "3.2.0", "docs": "https://docs.litellm.ai",          "openai_compatible": true,  "notes": "Self-hosted proxy; use provider='custom', provider_id='litellm', set base_url." },
+    { "id": "vllm",         "status": "provisional", "since": "3.2.0", "docs": "https://docs.vllm.ai",             "openai_compatible": true,  "notes": "Self-hosted server; use provider='custom', provider_id='vllm', set base_url." },
+    { "id": "perplexity",   "status": "provisional", "since": "3.2.0", "docs": "https://docs.perplexity.ai",       "openai_compatible": true,  "notes": null }
+  ]
+}

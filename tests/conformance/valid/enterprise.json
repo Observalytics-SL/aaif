@@ -1,0 +1,73 @@
+{
+  "x-sc-schema": "agent.schema.json",
+  "sc_standard": "SC-006",
+  "sc_version": "2.1.0",
+  "agent_id": "a0000002-0000-4000-8000-000000000002",
+  "status": "active",
+  "agent": {
+    "name": "Enterprise Agent",
+    "goal": "Process customer PII data under GDPR compliance constraints.",
+    "instructions": "You are a compliance-aware data processing agent. Never store PII beyond the session. Always log operations for audit.",
+    "model": {
+      "provider": "openai",
+      "preferred": "gpt-4o",
+      "fallbacks": [
+        { "provider": "anthropic", "model": "claude-3-5-sonnet-20241022" }
+      ],
+      "routing_strategy": "quality"
+    },
+    "tools": [
+      {
+        "name": "fetch_record",
+        "description": "Retrieve a customer record by ID.",
+        "protocol": "http",
+        "endpoint": "https://api.internal.example/records/{id}",
+        "parameters_schema": {
+          "type": "object",
+          "required": ["id"],
+          "properties": {
+            "id": { "type": "string" }
+          }
+        },
+        "auth": {
+          "type": "bearer",
+          "env_var": "INTERNAL_API_TOKEN"
+        }
+      }
+    ],
+    "constraints": [
+      "Do not reveal raw PII in responses.",
+      "Only process records belonging to the authenticated user."
+    ],
+    "memory": [
+      {
+        "scope": "session",
+        "backend": "in_memory",
+        "key": "session_context",
+        "content": "Stores per-session working state."
+      }
+    ],
+    "telemetry": {
+      "tracing": true,
+      "otlp_endpoint": "https://otel.internal.example:4317",
+      "trace_context_header": "traceparent"
+    },
+    "evaluation": {
+      "judge_model": "gpt-4o",
+      "metrics": [
+        { "name": "faithfulness", "threshold": 0.9 }
+      ]
+    },
+    "compliance": {
+      "safety_level": "strict",
+      "data_residency": "EU",
+      "pii_handling": "anonymize",
+      "human_in_the_loop": {
+        "enabled": true,
+        "trigger": "before_write"
+      },
+      "audit_log": true
+    },
+    "required_capabilities": ["memory.in_memory", "compliance.human_in_the_loop", "telemetry.otel_traces"]
+  }
+}

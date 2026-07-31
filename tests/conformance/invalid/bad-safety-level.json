@@ -1,0 +1,13 @@
+{
+  "_comment": "MUST REJECT — 'maximum' is not a valid safety_level enum value",
+  "x-sc-schema": "agent.schema.json",
+  "sc_standard": "SC-006",
+  "sc_version": "2.1.0",
+  "agent": {
+    "name": "Bad Compliance Agent",
+    "goal": "Test bad enum value.",
+    "compliance": {
+      "safety_level": "maximum"
+    }
+  }
+}

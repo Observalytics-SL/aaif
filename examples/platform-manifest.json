@@ -1,0 +1,90 @@
+{
+  "x-sc-schema": "platform-manifest.schema.json",
+  "sc_standard": "SC-006",
+  "sc_version": "3.1.0",
+  "platform": {
+    "name": "Example AAIF Runtime",
+    "version": "1.0.0",
+    "vendor": "Acme Corp",
+    "manifest_url": "https://aaif.acme.example/manifest.json",
+    "aaif_conformance_level": "Stateful",
+    "aaif_versions_supported": ["2.0.0", "2.1.0", "3.0.0", "3.2.0"],
+
+    "capabilities": {
+      "tool": {
+        "function": true,
+        "mcp": true,
+        "http": true,
+        "openapi": true,
+        "parallel_calls": true
+      },
+      "memory": {
+        "in_memory": true,
+        "redis": true,
+        "postgres": true,
+        "qdrant": true,
+        "vector": true,
+        "mongodb": false,
+        "elasticsearch": false,
+        "pinecone": false,
+        "chroma": false
+      },
+      "model": {
+        "providers": ["openai", "anthropic", "groq", "ollama", "azure_openai", "openrouter"],
+        "routing_strategies": ["cost", "latency", "quality", "round_robin"],
+        "fallback": true,
+        "streaming": true,
+        "function_calling": true,
+        "structured_output": true,
+        "vision": true
+      },
+      "orchestration": {
+        "pipeline": true,
+        "parallel": true,
+        "dynamic_routing": true,
+        "handoff": true,
+        "consensus": true,
+        "max_subagents": 16,
+        "condition_languages": ["jsonpath", "cel", "jsonlogic", "always", "never"]
+      },
+      "auth": {
+        "bearer": true,
+        "api_key": true,
+        "oauth2": true,
+        "aws_sigv4": true,
+        "vault": {
+          "supported": true,
+          "providers": ["aws_secrets_manager", "hashicorp_vault", "azure_key_vault"]
+        }
+      },
+      "state": {
+        "checkpoint": true,
+        "live_migration": true,
+        "streaming_handoff": true,
+        "max_conversation_tokens": 0
+      },
+      "compliance": {
+        "human_in_the_loop": true,
+        "audit_log": true,
+        "pii_scrubbing": true,
+        "data_residency_regions": ["EU", "US", "UK"]
+      },
+      "telemetry": {
+        "otel_traces": true,
+        "otel_metrics": true,
+        "otlp_export": true
+      }
+    },
+
+    "intake_endpoint": {
+      "url": "https://aaif.acme.example/v1/agents",
+      "method": "POST",
+      "auth_scheme": "bearer",
+      "content_type": "application/json",
+      "max_body_bytes": 1048576
+    },
+
+    "manifest_issued_at": "2026-06-10T00:00:00Z",
+    "manifest_expires_at": "2026-09-10T00:00:00Z"
+  }
+}

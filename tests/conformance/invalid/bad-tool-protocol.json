@@ -1,0 +1,21 @@
+{
+  "_comment": "MUST REJECT — 'grpc' is not a valid tool protocol enum value",
+  "x-sc-schema": "agent.schema.json",
+  "sc_standard": "SC-006",
+  "sc_version": "2.1.0",
+  "agent": {
+    "name": "Bad Tool Protocol Agent",
+    "goal": "Test bad tool protocol enum.",
+    "tools": [
+      {
+        "name": "my_tool",
+        "description": "A tool with an unsupported protocol.",
+        "protocol": "grpc",
+        "parameters_schema": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    ]
+  }
+}

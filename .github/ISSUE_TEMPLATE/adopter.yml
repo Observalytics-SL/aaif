@@ -1,0 +1,53 @@
+name: Adopter registration
+description: Register your project, product, or organisation as an adopter of this standard.
+labels: ["adopter"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for adopting this standard! You can either open a PR directly to [ADOPTERS.md](../ADOPTERS.md), or fill in this form and we will open the PR on your behalf.
+
+  - type: input
+    id: name
+    attributes:
+      label: Organisation or project name
+      placeholder: "e.g. Acme Corp — Invoice Chaser"
+    validations:
+      required: true
+
+  - type: input
+    id: url
+    attributes:
+      label: URL
+      placeholder: "https://example.com"
+
+  - type: dropdown
+    id: subject_type
+    attributes:
+      label: What are you registering?
+      options:
+        - Production deployment
+        - Open-source implementation
+        - Research or academic use
+        - Internal tooling
+        - Proof of concept
+
+  - type: dropdown
+    id: conformance
+    attributes:
+      label: Conformance level (if known)
+      options:
+        - Core
+        - Tooled
+        - Portable
+        - Multi-agent
+        - Observable
+        - Enterprise
+        - Stateful
+        - Not yet assessed
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Anything else you want included in the ADOPTERS.md entry (one sentence max per the file format).

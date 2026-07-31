@@ -1,0 +1,55 @@
+name: Schema issue
+description: Report a problem with a schema, spec, or example — validation failure, incorrect type, ambiguous description, or spec inconsistency.
+labels: ["schema", "bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for anything that is **broken or wrong**: a JSON instance that should be valid but fails validation, a field with an incorrect type or description, or a conflict between the schema and the specification.
+
+        For *new* fields or changes, use the **Field proposal** template instead.
+
+  - type: dropdown
+    id: schema
+    attributes:
+      label: Which schema?
+      options:
+        - agent.schema.json
+        - agent-state.schema.json
+        - platform-manifest.schema.json
+        - conformance-report.schema.json
+        - context.jsonld
+        - SPECIFICATION.md (spec text only, no schema change)
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What is wrong?
+      description: Describe the problem clearly. Quote the schema path (e.g. `$.agent.tools[*].auth`) and the spec section if relevant.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Minimal failing instance
+      description: Paste a minimal JSON document that demonstrates the problem. Omit fields not relevant to the issue.
+      render: json
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: What should happen instead?
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Schema version
+      placeholder: "e.g. 3.4.0"
+    validations:
+      required: true

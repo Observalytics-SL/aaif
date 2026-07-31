@@ -1,0 +1,1344 @@
+
+
+
+
+Network Working Group                                      B. van Bussel
+Internet-Draft                                          Observalytics SL
+Intended status: Informational                              25 June 2026
+Expires: 27 December 2026
+
+
+               Autonomous Agent Interchange Format (AAIF)
+                      draft-schemacommons-aaif-00
+
+Abstract
+
+   The Autonomous Agent Interchange Format (AAIF) is an open, vendor-
+   neutral specification for the portable definition of artificial
+   intelligence agents.  An AAIF document encapsulates an agent's
+   identity, goal, system instructions, large language model (LLM)
+   provider preferences and fallback routing, multi-agent orchestration
+   topology (sequential pipeline, parallel swarm, dynamic routing, and
+   mid-run handoff), tool catalogue (supporting function, MCP, HTTP, and
+   OpenAPI protocols with structured authentication), memory
+   configuration, runtime policy, OpenTelemetry telemetry settings, LLM-
+   as-judge evaluation criteria, and compliance controls including data
+   residency and human-in-the-loop approval.
+
+   An agent defined in AAIF can be validated offline, committed to
+   version control, and imported into any conforming runtime regardless
+   of the original authoring environment.  This document describes the
+   AAIF data model, field semantics, conformance levels, capability
+   negotiation protocol, and the companion Agent State checkpoint schema
+   that enables cross-platform live migration of running agents.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 27 December 2026.
+
+
+
+
+
+van Bussel              Expires 27 December 2026                [Page 1]
+
+Internet-Draft                    AAIF                         June 2026
+
+
+Copyright Notice
+
+   Copyright (c) 2026 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents (https://trustee.ietf.org/
+   license-info) in effect on the date of publication of this document.
+   Please review these documents carefully, as they describe your rights
+   and restrictions with respect to this document.
+
+Table of Contents
+
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   3
+     1.1.  Requirements Language . . . . . . . . . . . . . . . . . .   4
+     1.2.  Scope . . . . . . . . . . . . . . . . . . . . . . . . . .   4
+   2.  Terminology . . . . . . . . . . . . . . . . . . . . . . . . .   4
+   3.  Design Principles . . . . . . . . . . . . . . . . . . . . . .   5
+   4.  AAIF Document Structure . . . . . . . . . . . . . . . . . . .   5
+     4.1.  Root and Identity Fields  . . . . . . . . . . . . . . . .   7
+     4.2.  LLM Provider Routing  . . . . . . . . . . . . . . . . . .   7
+     4.3.  Orchestration Topology  . . . . . . . . . . . . . . . . .   8
+     4.4.  Tool Definitions  . . . . . . . . . . . . . . . . . . . .   9
+     4.5.  Memory Configuration  . . . . . . . . . . . . . . . . . .   9
+     4.6.  Runtime Configuration . . . . . . . . . . . . . . . . . .  10
+     4.7.  Telemetry . . . . . . . . . . . . . . . . . . . . . . . .  10
+     4.8.  Evaluation  . . . . . . . . . . . . . . . . . . . . . . .  11
+     4.9.  Compliance Controls . . . . . . . . . . . . . . . . . . .  11
+   5.  Condition Expressions . . . . . . . . . . . . . . . . . . . .  12
+   6.  Conformance Levels  . . . . . . . . . . . . . . . . . . . . .  13
+   7.  Capability Negotiation  . . . . . . . . . . . . . . . . . . .  14
+   8.  Agent State and Checkpointing . . . . . . . . . . . . . . . .  15
+     8.1.  Agent State Document  . . . . . . . . . . . . . . . . . .  15
+     8.2.  Cross-Platform Migration Protocol . . . . . . . . . . . .  16
+     8.3.  Streaming Handoff Wire Format . . . . . . . . . . . . . .  16
+   9.  Binary Encoding . . . . . . . . . . . . . . . . . . . . . . .  17
+   10. Extension Registries  . . . . . . . . . . . . . . . . . . . .  17
+   11. Relationship to Prior Art . . . . . . . . . . . . . . . . . .  18
+   12. Security Considerations . . . . . . . . . . . . . . . . . . .  20
+   13. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  21
+     13.1.  Media Type Registration  . . . . . . . . . . . . . . . .  21
+     13.2.  Future Registry Considerations . . . . . . . . . . . . .  22
+   14. References  . . . . . . . . . . . . . . . . . . . . . . . . .  22
+     14.1.  Normative References . . . . . . . . . . . . . . . . . .  22
+     14.2.  Informative References . . . . . . . . . . . . . . . . .  23
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  23
+
+
+
+
+
+van Bussel              Expires 27 December 2026                [Page 2]
+
+Internet-Draft                    AAIF                         June 2026
+
+
+1.  Introduction
+
+   The multi-agent LLM platform ecosystem, as of mid-2026, comprises
+   more than a dozen actively developed frameworks: LangGraph, CrewAI,
+   AutoGen, Open WebUI, Cline, Semantic Kernel, BeeAI, Haystack, DSPy,
+   Agno, and the native agent APIs of OpenAI, Anthropic, and Google.
+   Each framework has defined its own concept of an agent and its own
+   storage format.  An agent authored for LangGraph cannot be imported
+   into CrewAI.  A definition written for Open WebUI is unreadable by
+   AutoGen.  Every platform has solved the same problem in an
+   incompatible way, and the developer is the primary victim of that
+   incompatibility.
+
+   This fragmentation has direct operational consequences.  Agent
+   definitions encode business logic: the instructions that shape an
+   AI's persona, the constraints that prevent harmful actions, the tools
+   the agent may call and the authentication credentials it uses, and
+   the compliance rules it must follow.  When that logic is locked
+   inside a proprietary format, it cannot be audited independently,
+   cannot be migrated without manual recreation, and cannot be shared
+   across team boundaries that use different tooling.  An agent
+   definition is becoming a new kind of compliance artefact, with the
+   same importance as a data processing agreement or terms-of-service
+   document.  It deserves the same portability.
+
+   Analogous fragmentation problems have been solved before.  Database
+   connectors fragmented until ODBC.  Email clients fragmented until
+   SMTP and MIME.  Calendar applications fragmented until iCalendar
+   [RFC5545].  Container deployments fragmented until the Open Container
+   Initiative image format.  In every case, the industry converged on a
+   shared definition format because the cost of incompatibility became
+   high enough that a neutral standard was the rational choice for all
+   parties.  The multi-agent LLM market is approaching that inflection
+   point.
+
+   This document specifies the Autonomous Agent Interchange Format
+   (AAIF), a portable, vendor-neutral definition format for AI agents.
+   AAIF standardises the declaration of an agent — its identity,
+   capabilities, and constraints — not its execution loop, so that a
+   definition created in one runtime can be imported and executed in any
+   other conforming runtime.
+
+
+
+
+
+
+
+
+
+
+van Bussel              Expires 27 December 2026                [Page 3]
+
+Internet-Draft                    AAIF                         June 2026
+
+
+1.1.  Requirements Language
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in BCP
+   14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+1.2.  Scope
+
+   AAIF is in scope for: agent name, goal, and system instructions; LLM
+   provider preferences and multi-provider fallback routing; tool
+   catalogue with protocol and authentication declarations; memory
+   backend configuration; multi-agent orchestration topology; runtime
+   policy (timeout, retry, concurrency); telemetry endpoints; evaluation
+   criteria and golden test cases; compliance controls (data residency,
+   PII handling, human-in-the-loop approval, audit logging); and agent
+   provenance including cryptographic signature.
+
+   AAIF is out of scope for: the agent execution loop itself; billing
+   and metering; provider-specific internal optimisations; and streaming
+   response wire formats between an agent and an end user (as opposed to
+   agent-to-agent state handoff, which is in scope for the Agent State
+   schema described in Section 8).
+
+2.  Terminology
+
+   AAIF document  A JSON (or CBOR, see Section 9) instance conforming to
+      one of the three AAIF schemas: agent definition, Agent State, or
+      platform manifest.
+
+   Agent definition  The primary AAIF document type: the complete
+      portable declaration of one agent, validated against
+      agent.schema.json.
+
+   Producer  Software that emits AAIF documents (an exporter from a
+      native agent framework).
+
+   Consumer  Software that imports an AAIF document and executes or
+      enforces it (a runtime).
+
+   Conformance level  One of the seven cumulative conformance levels
+      defined in Section 6 that a Producer or Consumer claims.
+
+   Condition  The structured-or-string routing and gating type used in
+      orchestration handoff conditions, subagent selection predicates,
+      event filters, and human-in-the-loop triggers.  See Section 5.
+
+
+
+
+van Bussel              Expires 27 December 2026                [Page 4]
+
+Internet-Draft                    AAIF                         June 2026
+
+
+   Capability  A dot-namespaced runtime feature string an agent may
+      declare as required via agent.required_capabilities[] and a
+      platform may advertise in its Platform Manifest.  See Section 7.
+
+   Platform Manifest  A machine-readable AAIF document (platform-
+      manifest.schema.json) published by a runtime that declares its
+      supported capabilities, conformance level, and intake endpoint.
+
+3.  Design Principles
+
+   AAIF is built on seven design principles:
+
+   1.  *Declare, don't bind.* Model and tools are preferences; Consumers
+       MAY substitute equivalent alternatives when the declared option
+       is unavailable.
+
+   2.  *Provider-agnostic routing.* The fallback chain and routing
+       strategy express intent across any LLM provider without hard-
+       coding one.  The consumer implements the routing layer.
+
+   3.  *Tool-protocol agnostic.* Function, MCP [MCP], HTTP, and OpenAPI
+       tool protocols are supported in a unified tool object.
+
+   4.  *Safety first-class.* Constraints and compliance fields are
+       normative; Consumers MUST enforce them.  Silent constraint
+       stripping is a conformance violation.
+
+   5.  *Composable.* Context schema references can point at other open
+       standards; orchestration subagent references link to other AAIF
+       definitions by UUID or URI.
+
+   6.  *Verifiable.* The provenance.signature field allows Consumers to
+       cryptographically verify an agent's origin before execution.
+
+   7.  *Observable by default.* Telemetry and evaluation blocks are
+       first-class fields, not optional afterthoughts.  Observability is
+       opt-out, not opt-in.
+
+4.  AAIF Document Structure
+
+   An AAIF agent definition is a JSON object validated against the AAIF
+   agent schema (JSON Schema draft 2020-12 [JSON-SCHEMA]).  The minimum
+   conformant document requires only three fields:
+
+
+
+
+
+
+
+
+van Bussel              Expires 27 December 2026                [Page 5]
+
+Internet-Draft                    AAIF                         June 2026
+
+
+   {
+     "sc_standard": "SC-006",
+     "agent": {
+       "name": "Example Agent",
+       "goal": "Assist users with their enquiries."
+     }
+   }
+
+   The full object model is organised as a tree with a root that carries
+   document-level metadata, an agent block containing the operational
+   declaration, and a provenance block:
+
+AgentDefinition (root)
+  sc_standard     "SC-006"  (required)
+  sc_version      string (semver, default "3.4.0")
+  agent_id        string (UUID, stable across import/export)
+  status          draft | active | deprecated
+  tags[]          string[]
+  agent
+    name / version / description / goal / instructions / skills[]
+    required_capabilities[]   (capability negotiation, Section 7)
+    model
+      provider / preferred / provider_id / base_url
+      fallbacks[]             (ordered multi-provider fallback chain)
+      routing_strategy        cost | latency | quality | round_robin
+      min_context_tokens      (routing guard)
+      params / params.extended / response_format
+    orchestration
+      role      orchestrator | worker | evaluator | router | synthesizer
+      subagents[] / handoff[] / pipeline[]
+      parallel_execution / max_iterations / consensus
+    context[]               (RAG sources: text / file / url / dataset)
+    tools[]                 (Section 5.3)
+    memory[]                (Section 5.4)
+    constraints[]           (hard guardrails, enforced by runtime)
+    io                      (input/output schemas, streaming, mode)
+    events                  (triggers and lifecycle hooks)
+    runtime                 (timeout, retries, concurrency, queue)
+    telemetry               (OTEL tracing, metrics, OTLP endpoint)
+    evaluation              (LLM-as-judge, metrics, test cases)
+    compliance              (safety_level, data_residency, PII, audit)
+  provenance
+    authored_by / source_platform / created_at / updated_at
+    license / sc_refs[] / signature
+
+
+
+
+
+
+
+van Bussel              Expires 27 December 2026                [Page 6]
+
+Internet-Draft                    AAIF                         June 2026
+
+
+4.1.  Root and Identity Fields
+
+   The sc_standard field MUST be the string "SC-006".  This serves as
+   the document type discriminator.
+
+   The agent_id field is a UUID assigned once at agent creation.  It
+   MUST NOT change on import, export, or version bump.  Consumers SHOULD
+   use it as the canonical deduplication key.
+
+   The status field reflects the agent definition's lifecycle: "draft"
+   (under development), "active" (production-ready), or "deprecated"
+   (retained for back-compat only).  Consumers MAY refuse to execute
+   "deprecated" agents.
+
+4.2.  LLM Provider Routing
+
+   The agent.model block expresses routing intent rather than a hard
+   binding to a specific model.  A conforming Consumer MUST implement
+   the following routing algorithm:
+
+   1.  Attempt the primary route: model.provider and model.preferred.
+
+   2.  If the primary provider is unavailable or rate-limited, walk
+       model.fallbacks[] in declared order.  Each fallback entry carries
+       its own provider, model identifier, and an optional cost ceiling
+       (max_cost_usd_per_1k_tokens).
+
+   3.  Apply model.routing_strategy when multiple models are equally
+       available: "cost" selects the cheapest model meeting
+       min_context_tokens; "latency" selects the fastest by observed
+       p50; "quality" selects the highest benchmark score by platform-
+       defined ranking; "round_robin" distributes load evenly;
+       "preferred_first" always tries the declared order before
+       optimising.
+
+   4.  Never route to a model whose context window is smaller than
+       model.min_context_tokens.
+
+   The model.provider field enumerates 16 standard providers: openai,
+   anthropic, google, vertex_ai, mistral, cohere, groq, ollama,
+   azure_openai, bedrock, huggingface, together, fireworks, deepseek,
+   xai, openrouter.  For providers not in the enumeration (gateway
+   proxies, self-hosted deployments, or new entrants), authors set
+   model.provider to "custom" and supply model.provider_id (a stable
+   string identifier, e.g. "copilot" or "litellm") and optionally
+   model.base_url (an OpenAI-compatible API base URL).  This keeps the
+   standard open-ended without enum churn for each new gateway.
+
+
+
+
+van Bussel              Expires 27 December 2026                [Page 7]
+
+Internet-Draft                    AAIF                         June 2026
+
+
+   The model.params.extended field is an open object that carries
+   provider-specific parameters not covered by standard fields (e.g.
+   extended thinking budget for Anthropic models).  The Consumer
+   forwards these verbatim to the provider API and MUST NOT validate
+   their contents.
+
+4.3.  Orchestration Topology
+
+   AAIF defines five agent roles and four topology patterns that cover
+   the majority of multi-agent LLM architectures observed in production.
+
+   The five roles are:
+
+   *  orchestrator — coordinates subagents and aggregates results.
+
+   *  worker — executes a specific task assigned by an orchestrator.
+
+   *  evaluator — scores or judges the output of other agents.
+
+   *  router — examines input and dispatches to appropriate specialists.
+
+   *  synthesizer — merges outputs from parallel workers into a single
+      result.
+
+   The four topology patterns are:
+
+   Sequential pipeline  Each agent's output is the next agent's input.
+      Declared via orchestration.pipeline[] (an ordered list of subagent
+      aliases).  Used when tasks have clear sequential dependency order.
+
+   Parallel swarm (fan-out/fan-in)  An orchestrator fans out to multiple
+      workers simultaneously; a synthesizer merges results.  Enabled by
+      setting orchestration.parallel_execution to true.  An optional
+      consensus mechanism (majority_vote, best_of_n, referee,
+      first_success) governs how the synthesizer resolves disagreement.
+
+   Dynamic routing  A router agent examines the input and dispatches to
+      the appropriate specialist.  Each entry in
+      orchestration.subagents[] carries a "when" Condition (see
+      Section 5) that governs selection.
+
+   Mid-run handoff  Any agent can delegate mid-run to another agent
+      using orchestration.handoff[].  The handoff entry declares a
+      Condition, a target agent reference, and flags controlling whether
+      context and memory are passed to the receiving agent.
+
+
+
+
+
+
+van Bussel              Expires 27 December 2026                [Page 8]
+
+Internet-Draft                    AAIF                         June 2026
+
+
+   These patterns compose freely.  A pipeline step can itself be a
+   swarm; a swarm worker can trigger a handoff.  The
+   orchestration.max_iterations field provides a loop guard (default 10)
+   that the Consumer MUST enforce.
+
+4.4.  Tool Definitions
+
+   Each entry in agent.tools[] declares a tool in one of four protocols:
+
+   function  An in-process callable.  The parameters_schema is forwarded
+      as-is to the model's function-calling API (OpenAI, Anthropic, and
+      Gemini formats are all compatible).  No endpoint is required.
+
+   mcp  A Model Context Protocol [MCP] server.  The endpoint uses the
+      form mcp://server-name/capability or a full WebSocket/stdio URI.
+      The Consumer connects to the MCP server and exposes its tools to
+      the LLM.
+
+   http  A raw REST endpoint.  The Consumer constructs a request using
+      parameters_schema as the request body schema.
+
+   openapi  An OpenAPI 3.x specification URL or local path.  The
+      Consumer parses the spec, exposes all or selected operations as
+      tools, and handles authentication via the spec's securitySchemes
+      combined with the AAIF auth block.
+
+   Every tool entry MAY carry a structured auth block.  The auth.type
+   field names the authentication mechanism (bearer, api_key, oauth2,
+   aws_sigv4, basic, mtls, or none).  Secrets MUST NOT appear inline in
+   the AAIF document.  The auth.env_var field names an environment
+   variable whose value the Consumer resolves at runtime.  The
+   auth.vault_ref field (introduced in v2.1) provides a structured
+   reference to a secret in an external vault — AWS Secrets Manager,
+   HashiCorp Vault, Azure Key Vault, GCP Secret Manager, or 1Password —
+   identified by provider, path, key, and optional version.  When both
+   env_var and vault_ref are declared, vault_ref takes precedence.
+
+   Additional per-tool fields control cache_ttl_seconds (cache
+   successful responses), timeout_seconds (per-call timeout), and
+   rate_limit (requests_per_minute and tokens_per_minute).
+
+4.5.  Memory Configuration
+
+   AAIF distinguishes four memory scopes reflecting fundamentally
+   different retention and privacy requirements:
+
+   *  user — persists across sessions for a single user.  MUST NOT be
+      shared across user boundaries.
+
+
+
+van Bussel              Expires 27 December 2026                [Page 9]
+
+Internet-Draft                    AAIF                         June 2026
+
+
+   *  session — scoped to a single conversation session.  MUST NOT
+      outlive the session boundary.
+
+   *  task — scoped to a single agentic task execution.
+
+   *  long_term — persistent storage across users and sessions.
+
+   Each memory entry declares a backend from the standard vocabulary:
+   in_memory, redis, postgres, sqlite, pinecone, weaviate, qdrant,
+   chroma, or custom.  Vector backends additionally declare an
+   embedding_model, a retrieval_strategy (similarity, keyword, hybrid,
+   or recency), and top_k (number of items to retrieve per query,
+   default 5).  A ttl_seconds field controls expiry; zero means never
+   expire.
+
+4.6.  Runtime Configuration
+
+   The agent.runtime block declares production safety controls.  A
+   Consumer MUST abort execution after runtime.timeout_seconds and
+   return a structured error.  A Consumer MUST NOT exceed
+   runtime.concurrency simultaneous instances.  The retry policy is
+   controlled by max_retries and retry_backoff (fixed, linear, or
+   exponential; default exponential).
+
+   The runtime.async_execution flag enables a Consumer to return a job
+   ID immediately and execute in the background.  The runtime.queue
+   field names a work queue for async execution.
+
+4.7.  Telemetry
+
+   The agent.telemetry block declares OpenTelemetry [OTEL]
+   configuration.  A Consumer with telemetry.tracing set to true SHOULD
+   emit the following spans per agent run:
+
+   *  aaif.agent.run (root) — with agent.id, agent.name, agent.version,
+      model.provider, model.name attributes.
+
+   *  aaif.agent.tool_call (child) — with tool.name, tool.protocol,
+      tool.endpoint.
+
+   *  aaif.agent.llm_call (child) — with llm.model, llm.provider,
+      llm.input_tokens, llm.output_tokens.
+
+   *  aaif.agent.memory_read and aaif.agent.memory_write — with
+      memory.scope, memory.backend.
+
+   *  aaif.agent.handoff — with target_agent.id, pass_context.
+
+
+
+
+van Bussel              Expires 27 December 2026               [Page 10]
+
+Internet-Draft                    AAIF                         June 2026
+
+
+   The telemetry.otlp_endpoint field specifies the OTLP collector
+   endpoint.  If omitted, the Consumer falls back to its platform
+   default.  W3C Trace Context [W3C-TRACE] propagation uses the header
+   named in telemetry.trace_context_header (default "traceparent").
+
+4.8.  Evaluation
+
+   The agent.evaluation block enables CI/CD quality gating.  The
+   judge_model field names the LLM used to evaluate agent outputs
+   (recommended to be at least as capable as the agent model).  The
+   metrics[] array declares name and threshold pairs; standard metric
+   names are: faithfulness, relevance, coherence, toxicity,
+   hallucination_rate, task_completion, latency_ms, cost_usd_per_run,
+   and tool_call_accuracy.  The test_cases[] array provides golden test
+   inputs with expected outputs and rubric criteria.  A Consumer running
+   CI evaluation SHOULD gate promotion to "status: active" on all
+   threshold conditions being met.
+
+4.9.  Compliance Controls
+
+   The agent.compliance block encodes legal and operational requirements
+   that travel with the agent definition and cannot be silently dropped
+   on import.
+
+   safety_level  One of: minimal, standard, strict, regulated.  Governs
+      Consumer behaviour on unsatisfied capabilities (see Section 7) and
+      constraint violations.
+
+   data_residency  One of: global, EU, US, UK, APAC, custom.  A Consumer
+      MUST route only to LLM providers with data centres in the declared
+      region.
+
+   pii_handling  One of: none, detect, anonymize, encrypt, reject.
+      Applied to memory items and tool outputs by the Consumer.
+
+   audit_log  Boolean.  When true, the Consumer MUST maintain an append-
+      only, tamper-evident log of all invocations.
+
+   human_in_the_loop  Object with enabled, trigger (a Condition), and
+      timeout_seconds.  When enabled is true, the Consumer MUST obtain
+      human approval before executing any write tool call.  The trigger
+      Condition allows scoping the gate to specific actions.
+
+
+
+
+
+
+
+
+
+van Bussel              Expires 27 December 2026               [Page 11]
+
+Internet-Draft                    AAIF                         June 2026
+
+
+5.  Condition Expressions
+
+   Several AAIF fields gate routing or execution:
+   orchestration.subagents[].when, orchestration.handoff[].condition,
+   events.triggers[].filter, and compliance.human_in_the_loop.trigger.
+   Each accepts a Condition value in one of two forms.
+
+   The structured form (RECOMMENDED) is an object naming an expression
+   language and an expression string:
+
+   {
+     "lang": "jsonpath",
+     "expr": "$.task.type",
+     "nl": "task type is code_review"
+   }
+
+   Supported languages are:
+
+   *  jsonpath — JSONPath query [RFC9535]; truthy if the result is non-
+      empty.
+
+   *  jmespath — JMESPath query; truthy if the result is truthy.
+
+   *  cel — Common Expression Language boolean expression.
+
+   *  jsonlogic — JsonLogic rule object evaluated against the payload.
+
+   *  always — constant true (omit expr).
+
+   *  never — constant false (omit expr).
+
+   The optional nl field is a human-readable description for logs and
+   UIs.  It is advisory; the structured expr is authoritative.
+
+   The string form is also accepted for authoring convenience and
+   backward compatibility.  A bare string is a hint only — different
+   runtimes interpret it differently (or via an LLM) — and MUST NOT be
+   relied upon for portable, reproducible routing.  Consumers SHOULD
+   emit a portability warning when routing on a string condition.
+
+   A Consumer that supports a declared lang MUST evaluate the structured
+   form deterministically and MUST NOT fall back to LLM interpretation
+   of nl.  A Consumer that does not support a declared lang MUST treat
+   the condition as unsatisfied and apply the same behaviour as an
+   unsatisfied required_capability per the agent's safety_level.
+
+
+
+
+
+
+van Bussel              Expires 27 December 2026               [Page 12]
+
+Internet-Draft                    AAIF                         June 2026
+
+
+6.  Conformance Levels
+
+   AAIF defines seven cumulative conformance levels.  Conformance is
+   self-certified against the public test suite (tests/conformance/ in
+   the reference repository).  There is no central certifying authority;
+   credibility comes from the claim being machine-checkable against
+   publicly available test fixtures.
+
+      +=============+===============================================+
+      | Level       | Requirements                                  |
+      +=============+===============================================+
+      | Core        | Validates against agent schema; agent.name    |
+      |             | and agent.goal present.                       |
+      +-------------+-----------------------------------------------+
+      | Tooled      | Core + at least one tool with                 |
+      |             | parameters_schema.                            |
+      +-------------+-----------------------------------------------+
+      | Portable    | Tooled + constraints[] non-empty + resolvable |
+      |             | tools[].endpoint.                             |
+      +-------------+-----------------------------------------------+
+      | Multi-agent | Portable + orchestration.role declared + at   |
+      |             | least one subagent reference or handoff rule. |
+      +-------------+-----------------------------------------------+
+      | Observable  | Portable + telemetry.tracing true + at least  |
+      |             | one evaluation metric with threshold.         |
+      +-------------+-----------------------------------------------+
+      | Enterprise  | Observable + compliance.safety_level declared |
+      |             | + compliance.audit_log true +                 |
+      |             | provenance.signature present.                 |
+      +-------------+-----------------------------------------------+
+      | Stateful    | Enterprise + required_capabilities[] includes |
+      |             | state.checkpoint + Agent State checkpoints    |
+      |             | supported.                                    |
+      +-------------+-----------------------------------------------+
+
+                                  Table 1
+
+   Conformance is per level and per direction.  A Producer at level L
+   exports AAIF documents that validate against the schema and satisfy
+   the level-L predicates.  A Consumer at level L imports and honours
+   every construct required at that level, including the normative MUST
+   statements for that level.
+
+   The Stateful level is deliberately advanced.  It introduces Agent
+   State checkpoints, cross-platform migration, and streaming handoff
+   (see Section 8).  Consumers SHOULD achieve Enterprise conformance
+   before implementing Stateful.  Enterprise conformance is
+   independently meaningful and is not a prerequisite for Stateful.
+
+
+
+van Bussel              Expires 27 December 2026               [Page 13]
+
+Internet-Draft                    AAIF                         June 2026
+
+
+   Conformance reports validate against schema/conformance-
+   report.schema.json and are published at the well-known path /.well-
+   known/aaif-conformance.json.
+
+7.  Capability Negotiation
+
+   The agent.required_capabilities[] field declares what an agent
+   requires from its executing runtime.  A Consumer MUST check all
+   declared capabilities before accepting an agent definition.
+
+   Capabilities use a dot-namespaced string format: category.capability.
+   Standard categories and example identifiers:
+
+   *  tool — tool.function, tool.mcp, tool.http, tool.openapi
+
+   *  memory — memory.vector, memory.redis, memory.postgres,
+      memory.pinecone, memory.qdrant
+
+   *  orchestration — orchestration.parallel, orchestration.handoff,
+      orchestration.pipeline, orchestration.consensus
+
+   *  telemetry — telemetry.otel
+
+   *  compliance — compliance.data_residency, compliance.hitl,
+      compliance.audit_log
+
+   *  auth — auth.vault
+
+   *  io — io.streaming, io.async, io.batch
+
+   *  state — state.checkpoint, state.restore
+
+   The Consumer behaviour on an unsatisfied capability depends on the
+   agent's compliance.safety_level:
+
+   *  minimal — log a warning and continue; the capability is silently
+      skipped.
+
+   *  standard — import the agent with a warning; disable the dependent
+      feature.
+
+   *  strict — MUST reject the import with a descriptive error listing
+      unsatisfied capabilities.
+
+   *  regulated — MUST reject the import; the failure MUST be audit-
+      logged.
+
+
+
+
+
+van Bussel              Expires 27 December 2026               [Page 14]
+
+Internet-Draft                    AAIF                         June 2026
+
+
+   Consumers SHOULD publish a machine-readable Platform Manifest at the
+   well-known URL path /.well-known/aaif-manifest.json.  The manifest
+   advertises the platform's supported capabilities, conformance level,
+   AAIF versions supported, and an intake endpoint
+   (platform.intake_endpoint) for posting agent definitions.
+   Orchestrators and CI/CD systems can fetch this manifest to perform
+   capability negotiation before dispatching an agent.
+
+8.  Agent State and Checkpointing
+
+   AAIF v3 introduces a companion schema, agent-state.schema.json, for
+   capturing, serialising, and restoring the complete execution state of
+   a running agent.  This enables three primary use cases: pause and
+   resume on the same platform, cross-platform live migration, and crash
+   recovery without full conversation replay.
+
+8.1.  Agent State Document
+
+   An Agent State document carries the following fields:
+
+   *  state_id — a UUID uniquely identifying this checkpoint.
+
+   *  agent_id — links to the originating agent definition.
+
+   *  run_id — groups all checkpoints for one execution run.
+
+   *  checkpoint_at — UTC timestamp of capture (ISO 8601).
+
+   *  status — one of: running, paused, awaiting_approval,
+      awaiting_tool_result, completed, failed, migrating.
+
+   *  iteration — current agentic loop count; the Consumer MUST enforce
+      max_iterations on restore.
+
+   *  pipeline_position — current_step, completed_steps[],
+      remaining_steps[], current_subagent, parallel_slot.
+
+   *  conversation[] — full message history; truncate from the oldest
+      end on restore if the model context window is smaller.
+
+   *  memory_snapshot[] — all in-scope memory items; vector embeddings
+      are NOT serialised and are re-computed on restore.
+
+   *  pending_tool_calls[] — in-flight or queued tool calls; the
+      Consumer re-issues or marks them timed-out on restore.
+
+   *  subagent_states[] — per-subagent summaries; active subagents
+      export their own Agent State documents for deep migration.
+
+
+
+van Bussel              Expires 27 December 2026               [Page 15]
+
+Internet-Draft                    AAIF                         June 2026
+
+
+   *  variables — named task-scope key-value pairs.
+
+   *  approval_request — present when status is "awaiting_approval";
+      carries trigger description and timeout.
+
+   *  error — present when status is "failed"; carries code, message,
+      step, retries_remaining.
+
+   *  provenance — source_platform, migration_token, and a SHA-256 hex
+      checksum of the canonical JSON (excluding the checksum field).
+
+8.2.  Cross-Platform Migration Protocol
+
+   A cross-platform migration follows seven steps:
+
+   1.  Source platform captures Agent State (status "paused" or
+       "migrating").
+
+   2.  Source platform issues a short-lived migration_token (signed,
+       expiry at most 15 minutes).
+
+   3.  Agent State document is transferred to the receiving platform
+       out-of-band (API, file, message queue).
+
+   4.  Receiving platform verifies the SHA-256 checksum, the
+       migration_token signature, and that agent_id matches a known
+       agent definition.
+
+   5.  Receiving platform imports the state: loads memory, restores
+       conversation, resumes at pipeline_position.current_step.
+
+   6.  Receiving platform re-issues pending_tool_calls still in-flight
+       or marks them timed-out.
+
+   7.  Execution resumes.
+
+8.3.  Streaming Handoff Wire Format
+
+   For uninterrupted mid-generation migration, AAIF v3 defines a
+   streaming handoff wire format:
+
+   Content-Type: application/x-aaif-handoff+ndjson
+
+   Each line is a newline-delimited JSON object with a "type"
+   discriminator.  Message types are: handoff_init, context_chunk,
+   memory_item, pipeline_state, pending_tool, subagent_ref,
+   handoff_complete, and handoff_error.
+
+
+
+
+van Bussel              Expires 27 December 2026               [Page 16]
+
+Internet-Draft                    AAIF                         June 2026
+
+
+   The stream MUST be transmitted over TLS (HTTPS or WSS); plaintext
+   streaming handoffs are non-conformant.  The receiving Consumer MUST
+   verify the migration_token in the handoff_init message before
+   processing subsequent messages.  If a handoff_error message is
+   received, the Consumer MUST discard all accumulated state and MUST
+   NOT resume execution.  The SHA-256 checksum in handoff_complete MUST
+   be verified against the reconstructed Agent State before execution
+   resumes.
+
+9.  Binary Encoding
+
+   AAIF documents are canonically JSON [RFC8259].  For bandwidth-
+   constrained transports (embedded runtimes, edge deployments, high-
+   throughput agent mesh), implementations MAY encode AAIF documents as
+   CBOR (Concise Binary Object Representation) [RFC8949].  The logical
+   structure, field names, enum values, and all constraints of the JSON
+   schemas apply without modification to CBOR-encoded documents.  The
+   media type for CBOR-encoded AAIF documents is:
+
+   application/cbor; profile="https://schemacommons.org/SC-006/cbor"
+
+   Implementations MUST NOT use integer keys as a compression scheme;
+   field names remain UTF-8 text strings so JSON round-trips are
+   lossless.  Any Consumer claiming AAIF conformance at Portable level
+   or above that accepts CBOR-encoded definitions MUST also accept the
+   equivalent JSON encoding and produce identical behaviour.
+
+10.  Extension Registries
+
+   AAIF has several open extension points where new values arise
+   regularly: LLM providers, runtime capabilities, condition languages,
+   vault providers, memory backends, and tool protocols.  Rather than
+   requiring a schema version change for each new value, AAIF maintains
+   community registries modelled on IANA's expert-review and
+   specification-required registration policies.
+
+   Each registry is a machine-readable JSON file validated against a
+   registry meta-schema.  The schema enum for each extension point is a
+   convenience subset of the registry; registered values with status
+   "standard" are conformant even if not yet reflected in the schema
+   enum.  Values in neither the enum nor the registry MUST use the
+   documented escape hatch (model.provider "custom" with provider_id, or
+   x- extension keys at the document root) rather than inventing
+   unregistered bare enum values.
+
+   The six registries, their extension points, and registration policies
+   are:
+
+
+
+
+van Bussel              Expires 27 December 2026               [Page 17]
+
+Internet-Draft                    AAIF                         June 2026
+
+
+   +==========================+=========================+=============+
+   | Registry                 | Extension point         |Policy       |
+   +==========================+=========================+=============+
+   | providers.json           | model.provider          |Specification|
+   |                          |                         |Required     |
+   +--------------------------+-------------------------+-------------+
+   | capabilities.json        | required_capabilities[] |Expert Review|
+   +--------------------------+-------------------------+-------------+
+   | condition-languages.json | Condition lang          |Specification|
+   |                          |                         |Required     |
+   +--------------------------+-------------------------+-------------+
+   | vault-providers.json     | auth.vault_ref.provider |Specification|
+   |                          |                         |Required     |
+   +--------------------------+-------------------------+-------------+
+   | memory-backends.json     | memory[].backend        |Specification|
+   |                          |                         |Required     |
+   +--------------------------+-------------------------+-------------+
+   | tool-protocols.json      | tools[].protocol        |Standards    |
+   |                          |                         |Action       |
+   +--------------------------+-------------------------+-------------+
+
+                                 Table 2
+
+   Registration policies follow IANA conventions: First Come First
+   Served (unique identifier and one-line description), Specification
+   Required (stable public specification or documentation URL), Expert
+   Review (Editor sign-off confirming orthogonality and scope), and
+   Standards Action (normative schema change in a new MINOR version).
+
+11.  Relationship to Prior Art
+
+   Before drafting this section, the editors searched specifically for
+   an existing standard defining a portable, vendor-neutral agent
+   _definition_ document — the thing AAIF itself is.  No such standard
+   was found.  The frameworks and protocols discussed below each address
+   an adjacent problem, but none of them defines the complete,
+   importable agent record that AAIF defines.  That absence is stated
+   plainly here, rather than overstated or replaced with invented
+   modesty about non-existent competitors.
+
+   Model Context Protocol (MCP)  MCP [MCP] standardises how an agent
+      invokes external tools — the wire protocol for tool calls.  It
+      does not specify what an agent is, how it routes to an LLM, how it
+      manages memory, or how it orchestrates subagents.  AAIF explicitly
+      incorporates MCP as one of its four supported tool protocols.  The
+      two specifications are complementary: MCP is the tool cable; AAIF
+      is the agent blueprint.  Separately, the MCP project's own
+      published roadmap [MCP-ROADMAP] (dated 2026-03-05) lists "audit
+
+
+
+van Bussel              Expires 27 December 2026               [Page 18]
+
+Internet-Draft                    AAIF                         June 2026
+
+
+      trails and observability" as an acknowledged, currently unsolved
+      Enterprise Readiness gap.  That is honest evidence that the agent
+      ecosystem has more than one unsolved fragmentation problem; it is
+      evidence of fragmentation generally, not specifically of the
+      portable-agent-definition gap that AAIF addresses, and is cited
+      here only for the former.
+
+   A2A Agent Card  The A2A Agent Card [A2A] is a minimal discovery
+      document advertising an agent's identity, capability tags, and
+      endpoint URL.  It is deliberately thin by design.  An AAIF
+      definition carries a superset of Agent Card information and can
+      generate a conformant Agent Card.  A2A addresses agent-to-agent
+      runtime messaging; AAIF addresses portable agent definition.
+
+   OpenAI Assistants API  The Assistants API is expressive within the
+      OpenAI platform but is bound to a specific vendor's runtime and
+      API surface.  AAIF can express the same concepts portably across
+      providers.  A bidirectional reference converter between OpenAI
+      Assistants format and AAIF is provided in the tooling repository.
+
+   Agent Persistent State Profile (APS)  draft-gaikwad-aps-profile-00
+      [APS] is an IETF individual draft (expired June 2026, not adopted
+      by any working group) specifying a storage _service class_ — an
+      "AgentPersistentState" usage class with a versioned
+      "PersistentStateLineOfService" schema, bound non-normatively to
+      the SNIA Swordfish/Redfish storage-management standards, covering
+      crash consistency, cryptographic erasure tied to identity, vector-
+      index workloads, and Kubernetes/CSI integration.  APS operates at
+      the storage-infrastructure layer: it describes how a storage
+      backend advertises itself as suitable for hosting agent state.
+      AAIF's Agent State schema (Section 8) operates at the document
+      layer: it describes the portable application-level record —
+      conversation history, memory snapshot, pipeline position, pending
+      tool calls, subagent states — captured from a running agent for
+      pause, resume, or migration between runtimes.  The two are
+      complementary, not competing: an AAIF Agent State document is the
+      kind of payload that could be persisted on an APS-class volume.
+      AAIF takes no position on, and has no dependency on, the storage
+      layer beneath a checkpoint.
+
+   OpenTelemetry GenAI Semantic Conventions and OpenInference  AAIF's
+      telemetry block (Section 4.7) intentionally does not define its
+      own span or event semantics.  Two real, overlapping conventions
+      already exist: the OpenTelemetry GenAI semantic conventions
+      [OTEL-GENAI] (gen_ai.* span attributes and an invoke_agent to
+      chat/execute_tool span tree; experimental as of March 2026 but
+      already emitted or instrumented by LangChain, CrewAI, AutoGen, and
+      AG2, and consumed natively by Datadog, Honeycomb, and New Relic),
+
+
+
+van Bussel              Expires 27 December 2026               [Page 19]
+
+Internet-Draft                    AAIF                         June 2026
+
+
+      and OpenInference [OPENINFERENCE] (Arize AI's OTel-based
+      convention with ten span kinds: LLM, EMBEDDING, RETRIEVER,
+      RERANKER, TOOL, CHAIN, AGENT, GUARDRAIL, EVALUATOR, PROMPT).  AAIF
+      defers span-attribute semantics to whichever of these the
+      executing runtime already speaks, rather than standardising a
+      third, competing vocabulary.  Agent observability and audit-event
+      vocabularies more broadly are out of scope for this document; see
+      the external prior-art note referenced from the Schema Commons
+      repository for that adjacent discussion.
+
+12.  Security Considerations
+
+   Consumers MUST treat imported tools[].endpoint values as untrusted
+   input and apply capability gating before activating any tool.  An
+   AAIF document from an unknown source could declare a tool endpoint
+   pointing to an attacker-controlled server.
+
+   Secrets MUST NOT appear inline in AAIF documents.  The auth.env_var
+   and auth.vault_ref fields name where the Consumer resolves the
+   secret; they carry a reference, not the credential itself.  Tools
+   that carry inline credential values in any field violate this
+   specification and MUST be rejected.
+
+   The constraints[] array MUST be enforced by the Consumer.  A Consumer
+   that silently drops a constraint is in violation of this
+   specification and may permit harmful agent behaviour.
+
+   Consumers MUST be alert to prompt injection in context[type=url]
+   values fetched at runtime.  Content retrieved from declared URLs
+   SHOULD be sanitised or sandboxed before injection into the agent's
+   context window.
+
+   The compliance.data_residency field MUST be respected.  Routing an
+   agent to a provider whose data centres are outside the declared
+   region violates the compliance contract and may have legal
+   consequences.
+
+   Agent State documents contain conversation history and memory
+   contents, which may include personally identifiable information
+   (PII).  The same pii_handling policy declared in the agent definition
+   MUST be applied to Agent State documents at rest and in transit.
+   Agent State documents MUST be transmitted over an encrypted channel.
+
+
+
+
+
+
+
+
+
+van Bussel              Expires 27 December 2026               [Page 20]
+
+Internet-Draft                    AAIF                         June 2026
+
+
+   The migration_token in Agent State documents and streaming handoffs
+   MUST be a signed, short-lived token with an expiry of at most 15
+   minutes.  The receiving Consumer MUST verify the token signature
+   before accepting the state.  The SHA-256 checksum MUST be verified
+   before restoring state; a mismatch indicates tampering or corruption
+   and the import MUST be rejected.
+
+   The provenance.signature field carries a Base64-encoded Ed25519
+   signature over the canonical JSON of the agent definition.  Consumers
+   receiving agents from untrusted or third-party sources SHOULD verify
+   this signature before execution.
+
+   The stack_trace field in Agent State error blocks SHOULD be stripped
+   before exporting a checkpoint to an external platform to avoid
+   disclosing implementation details.
+
+13.  IANA Considerations
+
+13.1.  Media Type Registration
+
+   This document requests registration of the following media type with
+   IANA.
+
+   Type name  application
+
+   Subtype name  x-aaif-handoff+ndjson
+
+   Required parameters  None.
+
+   Optional parameters  None.
+
+   Encoding considerations  UTF-8 newline-delimited JSON (NDJSON); each
+      line is a JSON object.
+
+   Security considerations  See Section 12 of this document.  The stream
+      MUST be transmitted over TLS.
+
+   Interoperability considerations  Recipients MUST verify the
+      migration_token and SHA-256 checksum before processing.
+
+   Published specification  This document.
+
+   Applications that use this media type  AAIF-conforming runtimes
+      performing live agent state handoff during cross-platform
+      migration of running AI agents.
+
+   Fragment identifier considerations  None.
+
+
+
+
+van Bussel              Expires 27 December 2026               [Page 21]
+
+Internet-Draft                    AAIF                         June 2026
+
+
+   Restrictions on usage  None.
+
+   Author  Bob van Bussel, bob@observalytics.com
+
+   Change controller  Observalytics SL (https://github.com/
+      Observalytics-SL)
+
+13.2.  Future Registry Considerations
+
+   AAIF currently maintains six community extension registries
+   (providers, capabilities, condition languages, vault providers,
+   memory backends, and tool protocols) as described in Section 10.
+   These registries are currently operated by the Schema Commons
+   project.  A future revision of this document or an accompanying
+   document may request that IANA operate one or more of these
+   registries under the appropriate IANA registration policies
+   (Specification Required or Expert Review as indicated per registry).
+
+14.  References
+
+14.1.  Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/rfc/rfc2119>.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+              May 2017, <https://www.rfc-editor.org/rfc/rfc8174>.
+
+   [RFC8259]  Bray, T., Ed., "The JavaScript Object Notation (JSON) Data
+              Interchange Format", STD 90, RFC 8259,
+              DOI 10.17487/RFC8259, December 2017,
+              <https://www.rfc-editor.org/rfc/rfc8259>.
+
+   [RFC8949]  Bormann, C. and P. Hoffman, "Concise Binary Object
+              Representation (CBOR)", STD 94, RFC 8949,
+              DOI 10.17487/RFC8949, December 2020,
+              <https://www.rfc-editor.org/rfc/rfc8949>.
+
+   [RFC9535]  Gössner, S., Normington, G., and C. Bormann, "JSONPath:
+              Query Expressions for JSON", RFC 9535,
+              DOI 10.17487/RFC9535, February 2024,
+              <https://www.rfc-editor.org/rfc/rfc9535>.
+
+
+
+
+
+
+van Bussel              Expires 27 December 2026               [Page 22]
+
+Internet-Draft                    AAIF                         June 2026
+
+
+   [JSON-SCHEMA]
+              Wright, A. and H. Andrews, "JSON Schema: A Media Type for
+              Describing JSON Documents", 2022,
+              <https://json-schema.org/draft/2020-12>.
+
+14.2.  Informative References
+
+   [RFC5545]  Desruisseaux, B., Ed., "Internet Calendaring and
+              Scheduling Core Object Specification (iCalendar)",
+              RFC 5545, DOI 10.17487/RFC5545, September 2009,
+              <https://www.rfc-editor.org/rfc/rfc5545>.
+
+   [A2A]      Linux Foundation (Agent2Agent Project), "Agent2Agent
+              Protocol", 2025, <https://github.com/a2aproject/A2A>.
+
+   [MCP]      Anthropic, "Model Context Protocol", 2024,
+              <https://modelcontextprotocol.io>.
+
+   [OTEL]     OpenTelemetry, "OpenTelemetry Specification", 2024,
+              <https://opentelemetry.io/docs/specs/>.
+
+   [W3C-TRACE]
+              W3C, "Trace Context", 2021,
+              <https://www.w3.org/TR/trace-context/>.
+
+   [APS]      Gaikwad, M., "Agent Persistent State Profile", Work in
+              Progress (expired), Work in Progress, Internet-Draft,
+              draft-gaikwad-aps-profile-00, November 2025,
+              <https://datatracker.ietf.org/doc/draft-gaikwad-aps-
+              profile/>.
+
+   [OTEL-GENAI]
+              OpenTelemetry, "Semantic Conventions for Generative AI
+              Systems", Experimental, 2026,
+              <https://opentelemetry.io/docs/specs/semconv/gen-ai/>.
+
+   [OPENINFERENCE]
+              Arize AI, "OpenInference Semantic Conventions", 2026,
+              <https://github.com/Arize-ai/openinference>.
+
+   [MCP-ROADMAP]
+              Model Context Protocol, "Model Context Protocol Roadmap",
+              5 March 2026,
+              <https://modelcontextprotocol.io/development/roadmap>.
+
+Author's Address
+
+
+
+
+
+van Bussel              Expires 27 December 2026               [Page 23]
+
+Internet-Draft                    AAIF                         June 2026
+
+
+   Bob van Bussel
+   Observalytics SL
+   Email: bob@observalytics.com
+   URI:   https://github.com/Observalytics-SL
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+van Bussel              Expires 27 December 2026               [Page 24]

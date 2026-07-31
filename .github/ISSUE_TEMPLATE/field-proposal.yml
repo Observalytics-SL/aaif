@@ -1,0 +1,68 @@
+name: Field proposal
+description: Propose adding a new field, enum value, or structural change to the schema or specification.
+labels: ["enhancement", "proposal"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to propose **adding or changing** something — a new field, a new enum value, a new conformance requirement, or a structural redesign.
+
+        Backwards-compatible additions (new optional fields, new enum values) are the easiest path. Breaking changes require a major version bump and will go through a 30-day public review period per the governance process.
+
+  - type: dropdown
+    id: schema
+    attributes:
+      label: Which schema or section?
+      options:
+        - agent.schema.json
+        - agent-state.schema.json
+        - platform-manifest.schema.json
+        - conformance-report.schema.json
+        - SPECIFICATION.md (spec text / conformance)
+        - context.jsonld
+        - New schema file
+    validations:
+      required: true
+
+  - type: dropdown
+    id: change_type
+    attributes:
+      label: Change type
+      options:
+        - New optional field
+        - New required field (breaking)
+        - New enum value
+        - Field rename or retype (breaking)
+        - New conformance level or requirement
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the real-world scenario where the current schema is insufficient.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: |
+        Sketch the new field(s) in JSON Schema format if possible. Include: field name, type, description, whether required or optional, and any constraints.
+      render: json
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches did you consider? Why is this one better?
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Example instances
+      description: Show a realistic JSON document that uses the proposed change.
+      render: json

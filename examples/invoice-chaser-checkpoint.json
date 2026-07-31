@@ -1,0 +1,124 @@
+{
+  "x-sc-schema": "agent-state.schema.json",
+  "sc_standard": "SC-006",
+  "sc_version": "3.0.0",
+  "state_id": "d7e8f9a0-1234-4000-8000-state0000001",
+  "agent_id": "a1b2c3d4-0001-4000-8000-invoice000001",
+  "run_id": "e8f9a0b1-5678-4000-8000-run00000001",
+  "agent_version": "1.2.0",
+  "checkpoint_at": "2026-06-10T09:17:43Z",
+  "status": "awaiting_approval",
+  "iteration": 3,
+
+  "pipeline_position": {
+    "current_step": "send_reminders",
+    "completed_steps": ["list_overdue_invoices", "draft_emails"],
+    "remaining_steps": ["log_results", "notify_finance_team"]
+  },
+
+  "conversation": [
+    {
+      "role": "system",
+      "content": "You are a courteous accounts-receivable assistant for Rivera Consulting. Identify overdue invoices, draft a personalised but firm reminder email for each one, and record the outcome. Never threaten legal action — always offer a payment link and a named contact for disputes. Use UK English. Sign off as 'The Accounts Team'.",
+      "token_count": 68,
+      "timestamp": "2026-06-10T09:15:00Z"
+    },
+    {
+      "role": "user",
+      "content": "{\"max_age_days\": 90, \"dry_run\": false}",
+      "token_count": 12,
+      "timestamp": "2026-06-10T09:15:01Z"
+    },
+    {
+      "role": "assistant",
+      "content": "I'll start by fetching the overdue invoices from the accounting system.",
+      "token_count": 18,
+      "timestamp": "2026-06-10T09:15:02Z"
+    },
+    {
+      "role": "assistant",
+      "content": "[tool call: list_overdue_invoices]",
+      "tool_name": "list_overdue_invoices",
+      "tool_call_id": "call_abc123",
+      "token_count": 22,
+      "timestamp": "2026-06-10T09:15:03Z"
+    },
+    {
+      "role": "tool",
+      "content": "[{\"invoice_id\":\"INV-2024-0891\",\"customer\":\"Thornton & Associates\",\"contact_email\":\"billing@thornton.example.com\",\"amount\":4750.00,\"currency\":\"GBP\",\"due_date\":\"2026-05-01\",\"days_overdue\":40},{\"invoice_id\":\"INV-2024-0905\",\"customer\":\"Hargreaves Digital\",\"contact_email\":\"finance@hargreaves.example.com\",\"amount\":12300.00,\"currency\":\"GBP\",\"due_date\":\"2026-05-10\",\"days_overdue\":31},{\"invoice_id\":\"INV-2024-0912\",\"customer\":\"Mendez & Partners\",\"contact_email\":\"accounts@mendez.example.com\",\"amount\":2100.00,\"currency\":\"GBP\",\"due_date\":\"2026-05-15\",\"days_overdue\":26}]",
+      "tool_call_id": "call_abc123",
+      "tool_name": "list_overdue_invoices",
+      "token_count": 189,
+      "timestamp": "2026-06-10T09:15:05Z"
+    },
+    {
+      "role": "assistant",
+      "content": "I have 3 overdue invoices. None are flagged as in_dispute. I have not sent reminders to any of these in the past week. I will now draft the three reminder emails.",
+      "token_count": 42,
+      "timestamp": "2026-06-10T09:15:06Z"
+    },
+    {
+      "role": "assistant",
+      "content": "Draft emails prepared for all three customers. I am now ready to send them. Awaiting approval before proceeding with send_email calls.",
+      "token_count": 31,
+      "timestamp": "2026-06-10T09:17:40Z"
+    }
+  ],
+
+  "memory_snapshot": [
+    {
+      "scope": "user",
+      "key": "company_name",
+      "content": "Rivera Consulting",
+      "backend": "redis",
+      "captured_at": "2026-06-10T09:15:00Z",
+      "ttl_remaining_seconds": 0
+    },
+    {
+      "scope": "task",
+      "key": "run_summary",
+      "content": "{\"invoices_fetched\": 3, \"emails_drafted\": 3, \"emails_sent\": 0, \"skipped\": 0, \"errors\": []}",
+      "backend": "in_memory",
+      "captured_at": "2026-06-10T09:17:40Z",
+      "ttl_remaining_seconds": 3357
+    },
+    {
+      "scope": "task",
+      "key": "drafted_emails",
+      "content": "[{\"to\":\"billing@thornton.example.com\",\"subject\":\"Reminder: Invoice INV-2024-0891 — Payment Overdue\",\"body\":\"Dear Thornton & Associates,\\n\\nWe hope this message finds you well. We are writing to draw your attention to invoice INV-2024-0891 for £4,750.00, which became due on 1 May 2026 and remains outstanding.\\n\\nYou can settle this invoice securely at https://pay.rivera-consulting.example.com.\\n\\nIf you have any questions or wish to discuss this matter, please contact our accounts team at accounts@rivera-consulting.example.com.\\n\\nKind regards,\\nThe Accounts Team\\nRivera Consulting\"},{\"to\":\"finance@hargreaves.example.com\",\"subject\":\"Reminder: Invoice INV-2024-0905 — Payment Overdue\",\"body\":\"Dear Hargreaves Digital,\\n\\nWe are writing regarding invoice INV-2024-0905 for £12,300.00, due 10 May 2026, which remains unpaid.\\n\\nPlease arrange payment at https://pay.rivera-consulting.example.com at your earliest convenience.\\n\\nFor queries, please contact accounts@rivera-consulting.example.com.\\n\\nKind regards,\\nThe Accounts Team\\nRivera Consulting\"},{\"to\":\"accounts@mendez.example.com\",\"subject\":\"Reminder: Invoice INV-2024-0912 — Payment Overdue\",\"body\":\"Dear Mendez & Partners,\\n\\nWe are following up on invoice INV-2024-0912 for £2,100.00, which was due on 15 May 2026.\\n\\nPayment can be made at https://pay.rivera-consulting.example.com.\\n\\nPlease do not hesitate to contact accounts@rivera-consulting.example.com with any questions.\\n\\nKind regards,\\nThe Accounts Team\\nRivera Consulting\"}]",
+      "backend": "in_memory",
+      "captured_at": "2026-06-10T09:17:40Z",
+      "ttl_remaining_seconds": 3357
+    }
+  ],
+
+  "pending_tool_calls": [],
+
+  "subagent_states": [],
+
+  "variables": {
+    "invoices_count": "3",
+    "total_overdue_gbp": "19150.00",
+    "oldest_invoice_id": "INV-2024-0891"
+  },
+
+  "approval_request": {
+    "trigger_description": "About to send 3 reminder emails to customers on behalf of Rivera Consulting. This action is irreversible — emails cannot be unsent.",
+    "pending_action": {
+      "tool_name": "send_email",
+      "arguments": {
+        "_batch": "3 emails to: billing@thornton.example.com, finance@hargreaves.example.com, accounts@mendez.example.com"
+      }
+    },
+    "requested_at": "2026-06-10T09:17:43Z",
+    "timeout_at": "2026-06-10T10:17:43Z",
+    "approver_hint": "finance-manager"
+  },
+
+  "provenance": {
+    "source_platform": "Open WebUI",
+    "source_runtime_version": "0.6.1",
+    "captured_by": "scheduler-service",
+    "checksum": "a3f7c21e88d4b96f1059e3cc2d7a54b8f0e12d3c9a7b6e5f4d3c2b1a0987654"
+  }
+}

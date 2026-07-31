@@ -1,0 +1,53 @@
+{
+  "_comment": "MUST PASS — structured (deterministic) condition forms on when / handoff.condition / trigger.filter / hitl.trigger, plus openrouter provider.",
+  "x-sc-schema": "agent.schema.json",
+  "sc_standard": "SC-006",
+  "sc_version": "3.2.0",
+  "agent_id": "a0000010-0000-4000-8000-000000000010",
+  "agent": {
+    "name": "Structured Routing Agent",
+    "goal": "Demonstrate deterministic, portable condition expressions.",
+    "model": {
+      "provider": "openrouter",
+      "preferred": "anthropic/claude-opus-4-5"
+    },
+    "orchestration": {
+      "role": "orchestrator",
+      "subagents": [
+        {
+          "ref": "b0000011-0000-4000-8000-000000000011",
+          "alias": "code_specialist",
+          "role": "specialist",
+          "when": { "lang": "jsonpath", "expr": "$.task.type", "nl": "task type is code_review" }
+        },
+        {
+          "ref": "c0000012-0000-4000-8000-000000000012",
+          "alias": "always_runner",
+          "role": "worker",
+          "when": { "lang": "always" }
+        }
+      ],
+      "handoff": [
+        {
+          "condition": { "lang": "cel", "expr": "input.intent == 'billing'", "nl": "billing query detected" },
+          "target_agent": "billing_specialist"
+        }
+      ]
+    },
+    "events": {
+      "triggers": [
+        {
+          "type": "webhook",
+          "webhook_path": "/triggers/review",
+          "filter": { "lang": "cel", "expr": "action == 'opened' || action == 'synchronize'" }
+        }
+      ]
+    },
+    "compliance": {
+      "human_in_the_loop": {
+        "enabled": true,
+        "trigger": { "lang": "cel", "expr": "confidence < 0.8" }
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "_comment": "MUST REJECT — 'regex' is not a valid condition expression language.",
+  "x-sc-schema": "agent.schema.json",
+  "sc_standard": "SC-006",
+  "agent": {
+    "name": "Bad Condition Lang",
+    "goal": "Test invalid condition language enum.",
+    "orchestration": {
+      "role": "orchestrator",
+      "subagents": [
+        {
+          "ref": "b0000013-0000-4000-8000-000000000013",
+          "alias": "worker",
+          "when": { "lang": "regex", "expr": "^code_review$" }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "registry": "aaif-vault-providers",
+  "sc_standard": "SC-006",
+  "description": "Secret-vault providers for tools[].auth.vault_ref.provider (SPECIFICATION §D, §L). The runtime resolves the secret at execution time using its own configured vault credentials; secret values never appear in an AAIF document.",
+  "registration_policy": "Specification Required (a public secret-resolution API).",
+  "updated_at": "2026-06-11",
+  "entries": [
+    { "id": "aws_secretsmanager", "status": "standard", "since": "2.1.0", "docs": "https://docs.aws.amazon.com/secretsmanager", "path_form": "ARN or secret name" },
+    { "id": "hashicorp_vault",    "status": "standard", "since": "2.1.0", "docs": "https://developer.hashicorp.com/vault",      "path_form": "secret/data/... mount path" },
+    { "id": "azure_keyvault",     "status": "standard", "since": "2.1.0", "docs": "https://learn.microsoft.com/azure/key-vault", "path_form": "https://<vault>.vault.azure.net/secrets/<name>" },
+    { "id": "gcp_secretmanager",  "status": "standard", "since": "2.1.0", "docs": "https://cloud.google.com/secret-manager",    "path_form": "projects/<id>/secrets/<name>/versions/<v>" },
+    { "id": "1password",          "status": "standard", "since": "2.1.0", "docs": "https://developer.1password.com",            "path_form": "op://<vault>/<item>/<field>" },
+    { "id": "custom",             "status": "standard", "since": "2.1.0", "docs": null,                                          "path_form": "provider-defined" }
+  ]
+}

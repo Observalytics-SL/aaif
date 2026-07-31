@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Schema Commons website
+    url: https://schemacommons.org
+    about: Visit schemacommons.org for documentation, schema browser, and the full standard catalogue.
