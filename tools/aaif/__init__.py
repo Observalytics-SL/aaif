@@ -30,7 +30,6 @@ from typing import Any
 
 _SCHEMA_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-    "SC-006-agent-interchange-format",
     "schema",
 )
 

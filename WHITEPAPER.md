@@ -414,7 +414,7 @@ The reference implementation is a Python package in `tools/aaif/` providing four
 PYTHONPATH=tools python -m aaif validate examples/invoice-chaser.json
 PYTHONPATH=tools python -m aaif convert  examples/invoice-chaser.json --target openai_assistant
 PYTHONPATH=tools python -m aaif import   my-assistant.json --source openai_assistant
-python tools/test_conformance.py SC-006-agent-interchange-format
+python tools/test_conformance.py
 ```
 
 The **bidirectional OpenAI Assistants converter** (`tools/aaif/`) round-trips agent definitions between AAIF and the OpenAI Assistants format. The test harness `tools/test_roundtrip.py` verifies that an Assistant exported to AAIF and re-imported as an Assistant produces an equivalent object, providing machine-verified evidence of format expressiveness. One-way exporters for LangGraph, CrewAI, and AutoGen are also included; they handle the core fields and log unmapped constructs with explicit diagnostic messages.
@@ -482,7 +482,7 @@ Historical precedent from ODBC, iCalendar, and OCI consistently shows that forma
 
 [5] van Bussel, B. "Autonomous Agent Interchange Format," Schema Commons SC-006 v3.4.0, Observalytics SL, June 2026. https://github.com/Observalytics-SL/aaif
 
-[6] van Bussel, B. "Agent Registry Protocol," Schema Commons SC-013, Observalytics SL, 2026. (forthcoming)
+[6] van Bussel, B. "Agent Registry (AREG)," Schema Commons SC-013 v0.1.0, Observalytics SL, 2026. https://github.com/Observalytics-SL/areg
 
 [7] van Bussel, B. "Agent Capability and Profile Model," Schema Commons SC-014 v1.0.0, Observalytics SL, June 2026.
 
@@ -505,4 +505,4 @@ Historical precedent from ODBC, iCalendar, and OCI consistently shows that forma
 ---
 
 *Schema Commons SC-006 AAIF v3.4.0 · CC BY 4.0 · June 2026*
-*Repository: https://github.com/Observalytics-SL/Frameworks/tree/main/SC-006-agent-interchange-format*
+*Repository: https://github.com/Observalytics-SL/aaif*
