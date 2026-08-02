@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thank you for adopting this standard! You can either open a PR directly to [ADOPTERS.md](../ADOPTERS.md), or fill in this form and we will open the PR on your behalf.
+        Thank you for adopting this standard! You can either open a PR directly to [ADOPTERS.md](https://github.com/Observalytics-SL/aaif/blob/main/ADOPTERS.md), or fill in this form and we will open the PR on your behalf.
 
   - type: input
     id: name

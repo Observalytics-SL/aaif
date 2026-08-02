@@ -930,6 +930,6 @@ A platform publishes a **Conformance Report** validating against [`schema/confor
 
 ### Author / editor
 
-Edited under the Schema Commons governance model ([GOVERNANCE.md](../GOVERNANCE.md)). Contributions are licensed CC BY 4.0 (specification) and Apache 2.0 (tooling). To cite, see [CITATION.cff](CITATION.cff).
+Edited under the Schema Commons governance model. Contributions are licensed CC BY 4.0 (specification) and Apache 2.0 (tooling). To cite, see [CITATION.cff](CITATION.cff).
 
 ---

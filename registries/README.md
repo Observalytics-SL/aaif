@@ -46,7 +46,7 @@ Every file validates against [`registry.schema.json`](registry.schema.json) and 
 4. Run `python tools/test_registries.py SC-006-agent-interchange-format` — it must pass.
 5. Open a PR titled `SC-006: register <registry> id '<id>'`.
 
-Lazy consensus applies (see [GOVERNANCE.md](../../GOVERNANCE.md)): no Editor objection within 14 days = accepted.
+Lazy consensus applies: no Editor objection within 14 days = accepted.
 
 ## Private / experimental identifiers
 

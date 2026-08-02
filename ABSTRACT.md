@@ -71,7 +71,7 @@ AI agents · multi-agent systems · LLM orchestration · agent portability · in
 ```bibtex
 @techreport{aaif-sc006-v3,
   title     = {Autonomous Agent Interchange Format (AAIF) — SC-006 v3.4.0},
-  author    = {{Schema Commons Working Group}},
+  author    = {van Bussel, Bob},
   year      = {2026},
   month     = {June},
   type      = {Public Draft},
@@ -85,6 +85,6 @@ AI agents · multi-agent systems · LLM orchestration · agent portability · in
 
 ## Contact
 
-- **Issues and proposals:** https://github.com/Observalytics-SL/Frameworks/issues
+- **Issues and proposals:** https://github.com/Observalytics-SL/aaif/issues
 - **Working group:** See CONTRIBUTING.md in the repository
 - **General enquiries:** hello@observalytics.com *(forthcoming)*

@@ -1,0 +1,25 @@
+name: validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install jsonschema
+      - name: Validate examples against schemas
+        run: python tools/validate.py
+      - name: Conformance corpus (must-pass + must-reject)
+        run: python tools/test_conformance.py
+      - name: Registry ↔ schema-enum consistency
+        run: python tools/test_registries.py
+      - name: OpenAI Assistants round-trip
+        run: python tools/test_roundtrip.py

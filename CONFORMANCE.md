@@ -59,4 +59,4 @@ Add a row to [ADOPTERS.md](ADOPTERS.md) linking to your `.well-known/aaif-confor
 
 ## Conformance changes between versions
 
-A platform's report names the `aaif_versions` it supports. Because every change is SemVer (see [GOVERNANCE.md](../GOVERNANCE.md)), a MINOR bump never invalidates an existing conformant document; re-certification is only needed to *claim* new MINOR features.
+A platform's report names the `aaif_versions` it supports. Because every schema change follows SemVer, a MINOR bump never invalidates an existing conformant document; re-certification is only needed to *claim* new MINOR features.

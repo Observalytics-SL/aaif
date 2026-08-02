@@ -23,9 +23,10 @@ keywords:
   - Model Context Protocol
   - JSON Schema
 authors:
-  - given-names: "Schema Commons"
-    name-particle: ""
-    family-names: "Contributors"
+  - family-names: "van Bussel"
+    given-names: "Bob"
+    affiliation: "Observalytics SL"
+    email: "bob@observalytics.com"
 license: CC-BY-4.0
 version: "3.4.0"
 date-released: "2026-06-25"

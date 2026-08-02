@@ -1,6 +1,6 @@
 # SC-006 · AAIF — Autonomous Agent Interchange Format
 
-[![Schema Commons Standard](assets/schema-commons-badge.svg)](https://github.com/Observalytics-SL) ![Draft 3.4](https://img.shields.io/badge/status-draft%203.4-orange) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20845316.svg)](https://doi.org/10.5281/zenodo.20845316) [![Cite](https://img.shields.io/badge/cite-CITATION.cff-blue)](CITATION.cff)
+[![Schema Commons Standard](assets/schema-commons-badge.svg)](https://github.com/Observalytics-SL) ![Draft 3.4](https://img.shields.io/badge/status-draft%203.4-orange) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20845316.svg)](https://doi.org/10.5281/zenodo.20845316) [![Cite](https://img.shields.io/badge/cite-CITATION.cff-blue)](CITATION.cff) [![IETF I-D](https://img.shields.io/badge/IETF%20I--D-draft--schemacommons--aaif--00-9cf)](https://datatracker.ietf.org/doc/draft-schemacommons-aaif/) [![CI](https://github.com/Observalytics-SL/aaif/actions/workflows/validate.yml/badge.svg)](https://github.com/Observalytics-SL/aaif/actions/workflows/validate.yml)
 
 > **Portable AI agent definitions.** AI agent frameworks each use a proprietary format for goals, model routing, tools, memory, and orchestration topology. AAIF is a vendor-neutral JSON Schema document format that captures all of that in a single file any conforming runtime can execute.
 
@@ -89,6 +89,11 @@ PYTHONPATH=tools python -m aaif validate examples/invoice-chaser.json
 PYTHONPATH=tools python -m aaif convert  examples/invoice-chaser.json --target openai_assistant
 PYTHONPATH=tools python -m aaif import   my-assistant.json --source openai_assistant
 python tools/validate.py
+
+# test suites (also run in CI)
+python tools/test_conformance.py   # tests/conformance/ must-pass + must-reject corpus
+python tools/test_registries.py    # registries/ ↔ schema-enum consistency
+python tools/test_roundtrip.py     # OpenAI Assistants round-trip losslessness
 ```
 
 ## Use cases
@@ -124,6 +129,8 @@ python tools/validate.py
 | [examples/orchestrator-pipeline.json](examples/orchestrator-pipeline.json) | Orchestrator: sequential 4-agent BI pipeline with human-in-the-loop |
 | [examples/code-review-swarm.json](examples/code-review-swarm.json) | Orchestrator: parallel 3-reviewer swarm with consensus + synthesizer |
 | [examples/invoice-chaser-checkpoint.json](examples/invoice-chaser-checkpoint.json) | Agent State: Invoice Chaser mid-run checkpoint in `awaiting_approval` status |
+| [tests/conformance/](tests/conformance/) | Normative test corpus: must-pass (`valid/`) and must-reject (`invalid/`) fixtures |
+| [tools/](tools/) | Reference `aaif` Python package, validator, and test suites (conformance, registries, round-trip) |
 
 ## Validate
 
