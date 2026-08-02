@@ -20,6 +20,6 @@ We pledge to make participation a harassment-free experience for everyone, regar
 
 ## Enforcement
 
-Report issues to the Steering Council (conduct@observalytics.com). Reports are handled confidentially. Consequences range from a warning to a permanent ban.
+Report issues to the Steering Council (general@observalytics.com). Reports are handled confidentially. Consequences range from a warning to a permanent ban.
 
 Adapted from the [Contributor Covenant](https://www.contributor-covenant.org), v2.1.

@@ -87,4 +87,4 @@ AI agents · multi-agent systems · LLM orchestration · agent portability · in
 
 - **Issues and proposals:** https://github.com/Observalytics-SL/aaif/issues
 - **Working group:** See CONTRIBUTING.md in the repository
-- **General enquiries:** hello@observalytics.com *(forthcoming)*
+- **General enquiries:** general@observalytics.com
