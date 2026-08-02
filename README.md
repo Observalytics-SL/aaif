@@ -80,7 +80,7 @@ AAIF supports 16 providers out of the box: `openai`, `anthropic`, `google`, `ver
 - **Extend without forking.** Open extension points (providers, capabilities, condition languages, vault providers, memory backends, tool protocols) live in community [`registries/`](registries/) with IANA-style registration policies. Add an identifier by pull request; no schema version bump. The schema enums are just a *recommended subset*. See [SPECIFICATION §X](SPECIFICATION.md).
 - **Verify conformance.** Self-certify per level and direction against the public test suite and publish a machine-readable report at `/.well-known/aaif-conformance.json`. See [CONFORMANCE.md](CONFORMANCE.md).
 - **Prove portability.** The reference `aaif` package converts agents to and from OpenAI Assistants, with one-way exporters for LangGraph / CrewAI / AutoGen.
-- **Cite it.** [`CITATION.cff`](CITATION.cff) + a Zenodo DOI; see [PUBLISHING.md](PUBLISHING.md) for the arXiv / IETF Internet-Draft / W3C Community Group paths.
+- **Cite it.** [`CITATION.cff`](CITATION.cff) + a Zenodo DOI.
 - **Report issues safely.** [SECURITY.md](SECURITY.md) defines the threat model and disclosure process.
 
 ```bash
@@ -109,7 +109,6 @@ python tools/validate.py
 | [WHITEPAPER.md](WHITEPAPER.md) | Publication essay — the case for a portable agent standard and readiness assessment |
 | [ABSTRACT.md](ABSTRACT.md) | Structured abstract for registry submission, IETF I-D, and citation |
 | [CONFORMANCE.md](CONFORMANCE.md) | How to self-certify a platform and publish a conformance report |
-| [PUBLISHING.md](PUBLISHING.md) | Paths to DOI, arXiv, IETF Internet-Draft, and W3C Community Group |
 | [SECURITY.md](SECURITY.md) | Threat model and vulnerability disclosure policy |
 | [CITATION.cff](CITATION.cff) | Citation metadata (GitHub "Cite this repository" + Zenodo DOI) |
 | [registries/](registries/) | Community extension registries (providers, capabilities, condition langs, vaults, backends, protocols) |
